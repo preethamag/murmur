@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "murmur"
+version = "0.1.0"
+description = "Open-source voice dictation for macOS and Windows using local Whisper models"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["whisper", "dictation", "voice", "transcription", "macos", "windows"]
+
+dependencies = [
+    "sounddevice>=0.4.6",
+    "numpy>=1.24",
+    "pynput>=1.7",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+mac = ["rumps>=0.4.0", "mlx-whisper>=0.4.1", "faster-whisper>=1.0.0"]
+win = ["pystray>=0.19", "pillow>=10.0", "pyperclip>=1.8", "faster-whisper>=1.0.0"]
+
+[project.scripts]
+murmur = "murmur.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["murmur*"]

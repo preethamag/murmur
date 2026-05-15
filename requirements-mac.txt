@@ -1,0 +1,4 @@
+-r requirements.txt
+rumps>=0.4.0
+mlx-whisper>=0.4.1       # Apple Silicon — auto-downloads model weights
+faster-whisper>=1.0.0    # Intel Mac fallback

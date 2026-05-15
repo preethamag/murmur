@@ -1,0 +1,107 @@
+name: Build Releases
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  # ── macOS .dmg ──────────────────────────────────────────────────────────────
+  build-mac:
+    runs-on: macos-14          # Apple Silicon runner
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-mac.txt
+          pip install pyinstaller create-dmg || brew install create-dmg
+
+      - name: Build .app
+        run: |
+          cd build
+          pyinstaller murmur-mac.spec --distpath ../dist/mac --workpath ../build/work
+
+      - name: Package .dmg
+        run: |
+          create-dmg \
+            --volname "Murmur" \
+            --volicon "assets/icon.icns" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "Murmur.app" 175 190 \
+            --hide-extension "Murmur.app" \
+            --app-drop-link 425 190 \
+            "dist/Murmur-mac.dmg" \
+            "dist/mac/Murmur.app" \
+          || hdiutil create -volname Murmur -srcfolder dist/mac/Murmur.app -ov -format UDZO dist/Murmur-mac.dmg
+
+      - name: Upload .dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: Murmur-mac
+          path: dist/Murmur-mac.dmg
+
+  # ── Windows .exe ────────────────────────────────────────────────────────────
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements-win.txt pyinstaller
+
+      - name: Build .exe
+        run: |
+          cd build
+          pyinstaller murmur-win.spec --distpath ..\dist\win --workpath ..\build\work
+
+      - name: Zip .exe
+        run: Compress-Archive -Path dist\win\Murmur.exe -DestinationPath dist\Murmur-win.zip
+
+      - name: Upload .exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: Murmur-win
+          path: dist/Murmur-win.zip
+
+  # ── GitHub Release ──────────────────────────────────────────────────────────
+  release:
+    needs: [build-mac, build-win]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Murmur-mac
+          path: dist
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Murmur-win
+          path: dist
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/Murmur-mac.dmg
+            dist/Murmur-win.zip
+          generate_release_notes: true
+          draft: false
