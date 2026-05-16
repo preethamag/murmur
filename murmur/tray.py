@@ -24,7 +24,8 @@ def _run_mac(app):
                 rumps.MenuItem(f"Model: {controller.cfg['model']}"),
                 rumps.MenuItem(f"Hotkey: {controller.cfg['hotkey']}"),
                 None,
-                rumps.MenuItem("Settings", callback=self._open_settings),
+                rumps.MenuItem("Settings",   callback=self._open_settings),
+                rumps.MenuItem("Vocabulary", callback=self._open_vocabulary),
                 None,
                 rumps.MenuItem("Quit", callback=rumps.quit_application),
             ]
@@ -40,6 +41,9 @@ def _run_mac(app):
 
         def _open_settings(self, _):
             self._ctrl.open_settings()
+
+        def _open_vocabulary(self, _):
+            self._ctrl.open_vocabulary()
 
     mac_app = _MacApp(app)
     app._set_state = mac_app.set_state
@@ -70,8 +74,9 @@ def _run_win(app):
         title="Murmur",
         menu=pystray.Menu(
             pystray.MenuItem(f"Model: {app.cfg['model']}", None),
-            pystray.MenuItem("Settings", lambda: app.open_settings()),
-            pystray.MenuItem("Quit", lambda: tray.stop()),
+            pystray.MenuItem("Settings",   lambda: app.open_settings()),
+            pystray.MenuItem("Vocabulary", lambda: app.open_vocabulary()),
+            pystray.MenuItem("Quit",       lambda: tray.stop()),
         ),
     )
 

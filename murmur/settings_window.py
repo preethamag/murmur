@@ -63,7 +63,7 @@ def _value_for(options, label):
 # ── window ────────────────────────────────────────────────────────────────────
 
 class SettingsWindow:
-    W, H = 420, 260
+    W, H = 420, 300
 
     def __init__(self):
         self.cfg = config.load()
@@ -116,6 +116,15 @@ class SettingsWindow:
         tk.Entry(dur_frame, textvariable=self._dur_var, width=6).pack(side="left")
         tk.Label(dur_frame, text=" seconds").pack(side="left")
 
+        self._row(frame, "AI Cleanup", 4)
+        ai_frame = tk.Frame(frame)
+        ai_frame.grid(row=4, column=1, sticky="w", pady=10)
+        self._ai_var = tk.BooleanVar(value=self.cfg.get("ai_cleanup", False))
+        tk.Checkbutton(
+            ai_frame, variable=self._ai_var,
+            text="Remove fillers & fix grammar  (requires Ollama)",
+        ).pack(side="left")
+
         # Divider + Save
         ttk.Separator(root, orient="horizontal").pack(fill="x", pady=(0, 10))
         btn_frame = tk.Frame(root)
@@ -133,6 +142,7 @@ class SettingsWindow:
         self.cfg["model"]        = _value_for(MODELS,     self._model_var.get())
         self.cfg["language"]     = _value_for(LANGUAGES,  self._lang_var.get())
         self.cfg["max_duration"] = dur
+        self.cfg["ai_cleanup"]   = self._ai_var.get()
 
         config.save(self.cfg)
         self._root.destroy()

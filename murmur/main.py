@@ -6,7 +6,7 @@ import threading
 from . import config
 from .recorder import Recorder
 from .hotkey import HotkeyListener
-from . import injector, transcriber, tray, permissions
+from . import injector, transcriber, tray, permissions, cleaner, vocabulary
 from .settings_window import SettingsWindow
 
 
@@ -62,6 +62,8 @@ class MurmurController:
                 language=self.cfg["language"],
             )
             if text:
+                vocab = vocabulary.load()
+                text = cleaner.clean(text, self.cfg, vocab)
                 injector.inject(text)
         finally:
             try:
@@ -81,6 +83,15 @@ class MurmurController:
             proc.wait()
             if proc.returncode == 0:
                 self._reload_config()
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def open_vocabulary(self):
+        def _run():
+            subprocess.Popen(
+                [sys.executable, "-m", "murmur.vocabulary_window"],
+                text=True,
+            ).wait()
 
         threading.Thread(target=_run, daemon=True).start()
 

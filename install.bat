@@ -56,6 +56,45 @@ echo   Installing dependencies...
 pip install -r requirements-win.txt -q
 pip install -e . -q
 
+:: ── Ollama (AI Cleanup + Vocabulary) ──────────────────────────────────────────
+echo   Checking for Ollama (used for AI cleanup and vocabulary corrections)...
+echo.
+
+set OLLAMA_INSTALLED=0
+where ollama >nul 2>&1
+if %errorlevel%==0 (
+    set OLLAMA_INSTALLED=1
+    echo   Ollama already installed.
+) else (
+    echo   Ollama is not installed.
+    echo   AI Cleanup and Context Vocabulary require Ollama + qwen2.5:1.5b (~1 GB).
+    echo.
+    set /p INST_OL="  Install Ollama now? [Y/n]: "
+    if /i "!INST_OL!"=="n" (
+        echo   Skipping Ollama. Install later from https://ollama.com
+        echo   Then run: ollama pull qwen2.5:1.5b
+    ) else (
+        echo   Downloading Ollama installer...
+        winget install Ollama.Ollama -e --silent
+        if %errorlevel%==0 (
+            set OLLAMA_INSTALLED=1
+        ) else (
+            echo   winget failed. Download manually from https://ollama.com/download/windows
+        )
+    )
+)
+
+if !OLLAMA_INSTALLED!==1 (
+    echo.
+    echo   Pulling qwen2.5:1.5b (~1 GB, happens once)...
+    start /b ollama serve
+    timeout /t 3 /nobreak >nul
+    ollama pull qwen2.5:1.5b
+    echo   qwen2.5:1.5b ready.
+)
+
+echo.
+
 :: Write config
 set CFG=%APPDATA%\Murmur\config.yaml
 if not exist "%APPDATA%\Murmur" mkdir "%APPDATA%\Murmur"
@@ -68,6 +107,8 @@ echo inject_method: clipboard
 echo sound_feedback: false
 echo max_duration: 60
 echo ai_cleanup: false
+echo ollama_model: qwen2.5:1.5b
+echo ollama_url: http://localhost:11434
 ) > "%CFG%"
 
 :: Download model

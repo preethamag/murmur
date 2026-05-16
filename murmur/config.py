@@ -11,14 +11,16 @@ else:
 CONFIG_FILE = CONFIG_DIR / "config.yaml"
 
 DEFAULTS = {
-    "hotkey": "right_option",   # right_option | f4 | f5 | right_ctrl
-    "model": "base",            # tiny | base | small | medium | large-v3
-    "language": "en",           # en | auto | es | fr | de | etc.
+    "hotkey": "right_option",
+    "model": "base",
+    "language": "en",
     "sample_rate": 16000,
     "inject_method": "clipboard",
     "sound_feedback": False,
     "max_duration": 60,
     "ai_cleanup": False,
+    "ollama_model": "qwen2.5:1.5b",
+    "ollama_url": "http://localhost:11434",
 }
 
 
