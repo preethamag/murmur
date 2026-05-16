@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Murmur — UI Mockups</title>
+<style>
+  :root {
+    --bg:       #0a0a0a;
+    --s1:       #1c1c1e;
+    --s2:       #2c2c2e;
+    --s3:       #3a3a3c;
+    --s4:       #48484a;
+    --border:   rgba(255,255,255,0.10);
+    --border2:  rgba(255,255,255,0.06);
+    --text:     #ffffff;
+    --text2:    rgba(235,235,245,0.60);
+    --text3:    rgba(235,235,245,0.30);
+    --blue:     #0a84ff;
+    --green:    #30d158;
+    --red:      #ff453a;
+    --yellow:   #ffd60a;
+    --orange:   #ff9f0a;
+    --purple:   #bf5af2;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 56px 64px;
+    -webkit-font-smoothing: antialiased;
+    zoom: 1;
+  }
+
+  /* ── Page Header ─────────────────────────────────────────── */
+  .page-header { margin-bottom: 64px; }
+  .page-header h1 { font-size: 40px; font-weight: 700; letter-spacing: -0.5px; }
+  .page-header p  { font-size: 17px; color: var(--text2); margin-top: 6px; }
+
+  /* ── Section ─────────────────────────────────────────────── */
+  .section { margin-bottom: 72px; }
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.10em;
+    text-transform: uppercase; color: var(--text3);
+    margin-bottom: 24px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border2);
+  }
+  .row { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .mock-label { font-size: 12px; color: var(--text3); }
+
+  /* ── macOS Window Shell ──────────────────────────────────── */
+  .window {
+    background: rgba(36,36,38,0.97);
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.13);
+    box-shadow: 0 32px 80px rgba(0,0,0,0.85), 0 0 0 0.5px rgba(255,255,255,0.06) inset;
+    overflow: hidden;
+  }
+  .titlebar {
+    height: 52px; display: flex; align-items: center; padding: 0 16px;
+    background: rgba(44,44,46,0.90);
+    border-bottom: 1px solid var(--border2);
+    position: relative;
+  }
+  .titlebar-title {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    font-size: 13px; font-weight: 600; color: var(--text2);
+    white-space: nowrap;
+  }
+  .tls { display: flex; gap: 8px; }
+  .tl { width: 12px; height: 12px; border-radius: 50%; }
+  .tl-r { background: #ff5f57; }
+  .tl-y { background: #ffbd2e; }
+  .tl-g { background: #28c940; }
+  .wbody { padding: 20px; }
+
+  /* ── macOS Menu Bar ──────────────────────────────────────── */
+  .menubar {
+    height: 44px; background: rgba(30,30,32,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; padding: 0 20px;
+    justify-content: space-between;
+    border-radius: 10px 10px 0 0;
+    font-size: 16px;
+  }
+  .menubar-left { display: flex; gap: 20px; align-items: center; color: var(--text2); }
+  .menubar-left .apple { font-size: 18px; color: var(--text); }
+  .menubar-right { display: flex; gap: 10px; align-items: center; color: var(--text2); font-size: 15px; }
+  .menubar-icon {
+    width: 52px; height: 38px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative;
+  }
+  .menubar-icon.active { background: rgba(255,255,255,0.18); }
+  .mic-dot {
+    position: absolute; top: 3px; right: 3px;
+    width: 11px; height: 11px; border-radius: 50%;
+  }
+
+  /* ── Menu Dropdown ───────────────────────────────────────── */
+  .dropdown {
+    background: rgba(44,44,46,0.97);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 0 0.5px rgba(255,255,255,0.05) inset;
+    overflow: hidden;
+    min-width: 200px;
+  }
+  .dropdown-item {
+    padding: 6px 14px; font-size: 13px; color: var(--text);
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+  }
+  .dropdown-item:hover { background: var(--blue); border-radius: 6px; margin: 0 4px; }
+  .dropdown-item.dimmed { color: var(--text2); font-size: 12px; cursor: default; }
+  .dropdown-item.dimmed:hover { background: transparent; margin: 0; }
+  .dropdown-sep { height: 1px; background: var(--border2); margin: 4px 0; }
+  .dropdown-header { padding: 8px 14px 4px; }
+
+  /* ── Floating Pill (Overlay) ─────────────────────────────── */
+  .pill {
+    background: rgba(28,28,30,0.96);
+    border-radius: 100px;
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.06) inset;
+    padding: 12px 20px;
+    display: flex; align-items: center; gap: 14px;
+    backdrop-filter: blur(20px);
+  }
+  .pill-bars { display: flex; align-items: center; gap: 4px; height: 28px; }
+  .bar {
+    width: 4px; border-radius: 100px;
+    background: rgba(255,255,255,0.9);
+    animation: none;
+  }
+  .pill-text { font-size: 14px; color: rgba(235,235,245,0.75); white-space: nowrap; min-width: 180px; }
+  .pill-text .cursor { display: inline-block; width: 2px; height: 14px; background: var(--blue); border-radius: 1px; margin-left: 1px; vertical-align: middle; }
+  .pill-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ── Form Elements ───────────────────────────────────────── */
+  .form-row {
+    display: flex; align-items: center; padding: 10px 0;
+    border-bottom: 1px solid var(--border2);
+    gap: 12px;
+  }
+  .form-row:last-of-type { border-bottom: none; }
+  .form-label { font-size: 13px; color: var(--text2); width: 110px; flex-shrink: 0; }
+  .form-control {
+    flex: 1; background: var(--s2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 10px; font-size: 13px; color: var(--text);
+    display: flex; align-items: center; justify-content: space-between;
+    min-width: 0;
+  }
+  .form-control .chevron { color: var(--text3); font-size: 11px; }
+  .form-input {
+    flex: 1; background: var(--s2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 10px; font-size: 13px; color: var(--text);
+    width: 60px;
+  }
+  .toggle {
+    width: 44px; height: 26px; border-radius: 100px;
+    background: var(--green); position: relative; cursor: pointer; flex-shrink: 0;
+  }
+  .toggle.off { background: var(--s3); }
+  .toggle-knob {
+    width: 22px; height: 22px; border-radius: 50%; background: white;
+    position: absolute; top: 2px; right: 2px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    transition: right 0.2s;
+  }
+  .toggle.off .toggle-knob { right: auto; left: 2px; }
+  .btn {
+    background: var(--blue); border: none; border-radius: 8px;
+    padding: 8px 20px; font-size: 13px; font-weight: 600; color: white;
+    cursor: pointer; width: 100%; margin-top: 16px; text-align: center;
+  }
+  .btn-sm {
+    background: var(--s3); border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 12px; font-size: 12px; color: var(--text2); cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-add {
+    background: var(--blue); border: none; border-radius: 6px;
+    padding: 5px 12px; font-size: 12px; font-weight: 600; color: white; cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-danger { background: rgba(255,69,58,0.15); border-color: rgba(255,69,58,0.3); color: var(--red); }
+
+  /* ── Table ───────────────────────────────────────────────── */
+  .table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .table th {
+    text-align: left; padding: 8px 10px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3);
+    border-bottom: 1px solid var(--border);
+  }
+  .table td { padding: 9px 10px; color: var(--text); border-bottom: 1px solid var(--border2); }
+  .table tr:last-child td { border-bottom: none; }
+  .table tr:hover td { background: rgba(255,255,255,0.03); }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 100px;
+    font-size: 11px; font-weight: 500;
+  }
+  .badge-acronym  { background: rgba(10,132,255,0.2);  color: var(--blue); }
+  .badge-name     { background: rgba(48,209,88,0.2);   color: var(--green); }
+  .badge-project  { background: rgba(191,90,242,0.2);  color: var(--purple); }
+  .badge-context  { background: rgba(255,159,10,0.2);  color: var(--orange); }
+  .delete-btn { color: var(--text3); cursor: pointer; font-size: 14px; padding: 0 4px; }
+  .delete-btn:hover { color: var(--red); }
+
+  /* ── Permissions Screen ──────────────────────────────────── */
+  .step {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--border2);
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    width: 24px; height: 24px; border-radius: 50%; background: var(--s3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: var(--text2); flex-shrink: 0;
+  }
+  .step-text { font-size: 13px; color: var(--text); padding-top: 3px; }
+  .status-waiting { color: var(--text3); font-size: 13px; text-align: center; padding-top: 4px; }
+  .status-granted { color: var(--green); font-size: 13px; text-align: center; padding-top: 4px; }
+  .open-btn {
+    width: 100%; background: var(--s3); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px; font-size: 13px; font-weight: 600;
+    color: var(--text); cursor: pointer; text-align: center; margin-top: 4px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+
+  /* ── Add Row ─────────────────────────────────────────────── */
+  .add-row {
+    display: flex; gap: 8px; align-items: center;
+    padding: 12px 0 4px; border-top: 1px solid var(--border2); margin-top: 4px;
+  }
+  .add-input {
+    flex: 1; background: var(--s2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 10px; font-size: 12px; color: var(--text2);
+    min-width: 0;
+  }
+  .add-select {
+    background: var(--s2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 8px; font-size: 12px; color: var(--text2);
+  }
+
+  /* ── Vocab Section Header ────────────────────────────────── */
+  .vocab-section-header {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text3);
+    padding: 12px 10px 6px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  /* ── Desktop Background ──────────────────────────────────── */
+  .desktop {
+    background: linear-gradient(145deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+    border-radius: 10px; padding: 0; overflow: hidden;
+    position: relative;
+  }
+  .desktop-content {
+    padding: 32px; display: flex; align-items: center; justify-content: center;
+    min-height: 160px; position: relative;
+  }
+
+  /* ── Streaming Overlay States ────────────────────────────── */
+  .overlay-wrap { display: flex; flex-direction: column; gap: 12px; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Murmur</h1>
+  <p>UI Mockups — All screens</p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 1. MENU BAR STATES                                         -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">01 — Menu Bar States</div>
+  <div class="row">
+
+    <!-- Idle -->
+    <div class="col">
+      <div style="width:560px; border-radius:10px; overflow:hidden; border:1px solid var(--border);">
+        <div class="menubar">
+          <div class="menubar-left">
+            <span class="apple">&#63743;</span>
+            <span>File</span><span>Edit</span><span>View</span>
+          </div>
+          <div class="menubar-right">
+            <span>9:41 AM</span>
+            <div class="menubar-icon">
+              <svg width="36" height="16" viewBox="0 0 48 24" fill="none">
+                <defs>
+                  <linearGradient id="wIdle" x1="0" y1="0" x2="48" y2="0" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#5ac8fa" stop-opacity="0.85"/>
+                    <stop offset="100%" stop-color="#0a84ff" stop-opacity="0.85"/>
+                  </linearGradient>
+                </defs>
+                <path d="M0 12 C6 12 6 3 12 3 C18 3 18 21 24 21 C30 21 30 3 36 3 C42 3 42 21 48 21"
+                      stroke="url(#wIdle)" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div style="height:60px; background:linear-gradient(135deg,#1a1a2e,#16213e);"></div>
+      </div>
+      <div class="mock-label">Idle</div>
+    </div>
+
+    <!-- Recording -->
+    <div class="col">
+      <div style="width:560px; border-radius:10px; overflow:hidden; border:1px solid var(--border);">
+        <div class="menubar">
+          <div class="menubar-left">
+            <span class="apple">&#63743;</span>
+            <span>File</span><span>Edit</span><span>View</span>
+          </div>
+          <div class="menubar-right">
+            <span>9:41 AM</span>
+            <div class="menubar-icon active">
+              <svg width="36" height="16" viewBox="0 0 48 24" fill="none">
+                <defs>
+                  <linearGradient id="wRec" x1="0" y1="0" x2="48" y2="0" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#5ac8fa"/>
+                    <stop offset="100%" stop-color="#0a84ff"/>
+                  </linearGradient>
+                </defs>
+                <path d="M0 12 C6 12 6 3 12 3 C18 3 18 21 24 21 C30 21 30 3 36 3 C42 3 42 21 48 21"
+                      stroke="url(#wRec)" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <div class="mic-dot" style="background:#ff453a; box-shadow:0 0 5px #ff453a;"></div>
+            </div>
+          </div>
+        </div>
+        <div style="height:60px; background:linear-gradient(135deg,#1a1a2e,#16213e);"></div>
+      </div>
+      <div class="mock-label">Recording</div>
+    </div>
+
+    <!-- Processing -->
+    <div class="col">
+      <div style="width:560px; border-radius:10px; overflow:hidden; border:1px solid var(--border);">
+        <div class="menubar">
+          <div class="menubar-left">
+            <span class="apple">&#63743;</span>
+            <span>File</span><span>Edit</span><span>View</span>
+          </div>
+          <div class="menubar-right">
+            <span>9:41 AM</span>
+            <div class="menubar-icon active">
+              <svg width="36" height="16" viewBox="0 0 48 24" fill="none" opacity="0.4">
+                <defs>
+                  <linearGradient id="wProc" x1="0" y1="0" x2="48" y2="0" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#5ac8fa"/>
+                    <stop offset="100%" stop-color="#0a84ff"/>
+                  </linearGradient>
+                </defs>
+                <path d="M0 12 C6 12 6 3 12 3 C18 3 18 21 24 21 C30 21 30 3 36 3 C42 3 42 21 48 21"
+                      stroke="url(#wProc)" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <div class="mic-dot" style="background:#ffd60a;"></div>
+            </div>
+          </div>
+        </div>
+        <div style="height:60px; background:linear-gradient(135deg,#1a1a2e,#16213e);"></div>
+      </div>
+      <div class="mock-label">Transcribing</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 2. MENU DROPDOWN                                           -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">02 — Menu Bar Dropdown</div>
+  <div class="row">
+    <div class="col">
+      <div style="position:relative; width:340px;">
+        <!-- Menu bar above dropdown -->
+        <div style="border-radius:10px 10px 0 0; overflow:hidden; border:1px solid var(--border); border-bottom:none;">
+          <div class="menubar" style="border-radius:0;">
+            <div class="menubar-left">
+              <span class="apple">&#63743;</span>
+              <span>File</span><span>Edit</span>
+            </div>
+            <div class="menubar-right">
+              <span>9:41 AM</span>
+              <div class="menubar-icon active">
+                <svg width="36" height="16" viewBox="0 0 48 24" fill="none">
+                  <defs>
+                    <linearGradient id="wDropHead" x1="0" y1="0" x2="48" y2="0" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stop-color="#5ac8fa" stop-opacity="1"/>
+                      <stop offset="100%" stop-color="#0a84ff" stop-opacity="1"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M0 12 C6 12 6 3 12 3 C18 3 18 21 24 21 C30 21 30 3 36 3 C42 3 42 21 48 21"
+                        stroke="url(#wDropHead)" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Dropdown -->
+        <div class="dropdown" style="border-radius:0 0 10px 10px; border-top:none; min-width:200px; float:right;">
+          <div style="padding:8px 4px 4px;">
+            <div class="dropdown-item dimmed">
+              <svg width="32" height="14" viewBox="0 0 48 24" fill="none" style="flex-shrink:0;">
+                <defs>
+                  <linearGradient id="wReady" x1="0" y1="0" x2="48" y2="0" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#5ac8fa" stop-opacity="0.85"/>
+                    <stop offset="100%" stop-color="#0a84ff" stop-opacity="0.85"/>
+                  </linearGradient>
+                </defs>
+                <path d="M0 12 C6 12 6 3 12 3 C18 3 18 21 24 21 C30 21 30 3 36 3 C42 3 42 21 48 21"
+                      stroke="url(#wReady)" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              &nbsp;Murmur is ready
+            </div>
+            <div class="dropdown-sep"></div>
+            <div class="dropdown-item dimmed">Model &nbsp;<span style="color:var(--text3)">turbo</span></div>
+            <div class="dropdown-item dimmed">Hotkey &nbsp;<span style="color:var(--text3)">Right ⌥</span></div>
+            <div class="dropdown-sep"></div>
+            <div class="dropdown-item">⚙️&nbsp; Settings</div>
+            <div class="dropdown-item">📖&nbsp; Vocabulary</div>
+            <div class="dropdown-sep"></div>
+            <div class="dropdown-item" style="color:var(--red)">Quit Murmur</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 3. STREAMING OVERLAY (#5)                                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">03 — Streaming Overlay · Feature #5</div>
+  <div class="row">
+
+    <!-- Recording — just started -->
+    <div class="col">
+      <div class="desktop" style="width:420px;">
+        <div class="desktop-content" style="justify-content:flex-start; padding-bottom:20px; align-items:flex-end;">
+          <div class="pill">
+            <div class="pill-dot" style="background:var(--red); box-shadow:0 0 8px var(--red);"></div>
+            <div class="pill-bars">
+              <div class="bar" style="height:8px;"></div>
+              <div class="bar" style="height:20px;"></div>
+              <div class="bar" style="height:14px;"></div>
+              <div class="bar" style="height:24px;"></div>
+              <div class="bar" style="height:10px;"></div>
+            </div>
+            <div class="pill-text" style="color:var(--text3); font-style:italic;">Listening…</div>
+          </div>
+        </div>
+      </div>
+      <div class="mock-label">Recording — start</div>
+    </div>
+
+    <!-- Recording — words streaming in -->
+    <div class="col">
+      <div class="desktop" style="width:500px;">
+        <div class="desktop-content" style="justify-content:flex-start; padding-bottom:20px; align-items:flex-end;">
+          <div class="pill" style="max-width:460px;">
+            <div class="pill-dot" style="background:var(--red); box-shadow:0 0 8px var(--red);"></div>
+            <div class="pill-bars">
+              <div class="bar" style="height:20px;"></div>
+              <div class="bar" style="height:8px;"></div>
+              <div class="bar" style="height:26px;"></div>
+              <div class="bar" style="height:14px;"></div>
+              <div class="bar" style="height:18px;"></div>
+            </div>
+            <div class="pill-text">
+              The meeting is on Wednesday<span class="cursor"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mock-label">Recording — text streaming in</div>
+    </div>
+
+    <!-- Processing / cleanup -->
+    <div class="col">
+      <div class="desktop" style="width:500px;">
+        <div class="desktop-content" style="justify-content:flex-start; padding-bottom:20px; align-items:flex-end;">
+          <div class="pill" style="max-width:460px; opacity:0.85;">
+            <div class="pill-dot" style="background:var(--yellow);"></div>
+            <div class="pill-bars">
+              <div class="bar" style="height:4px; background:var(--text3);"></div>
+              <div class="bar" style="height:4px; background:var(--text3);"></div>
+              <div class="bar" style="height:4px; background:var(--text3);"></div>
+              <div class="bar" style="height:4px; background:var(--text3);"></div>
+              <div class="bar" style="height:4px; background:var(--text3);"></div>
+            </div>
+            <div class="pill-text" style="color:var(--text3);">
+              Cleaning up…
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mock-label">AI cleanup in progress</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 4. FIRST LAUNCH / PERMISSIONS                              -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">04 — First Launch · Permissions Onboarding</div>
+  <div class="row">
+
+    <!-- Waiting -->
+    <div class="col">
+      <div class="window" style="width:400px;">
+        <div class="titlebar">
+          <div class="tls"><div class="tl tl-r"></div><div class="tl tl-y"></div><div class="tl tl-g"></div></div>
+          <div class="titlebar-title">Murmur — Setup</div>
+        </div>
+        <div class="wbody" style="padding:24px 28px;">
+          <div style="text-align:center; margin-bottom:20px;">
+            <div style="margin-bottom:12px; display:flex; justify-content:center;">
+              <svg width="72" height="28" viewBox="0 0 96 32" fill="none">
+                <defs>
+                  <linearGradient id="wPerm" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#5ac8fa" stop-opacity="0.9"/>
+                    <stop offset="100%" stop-color="#0a84ff" stop-opacity="0.9"/>
+                  </linearGradient>
+                </defs>
+                <path d="M0 16 C12 16 12 4 24 4 C36 4 36 28 48 28 C60 28 60 4 72 4 C84 4 84 28 96 28"
+                      stroke="url(#wPerm)" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div style="font-size:16px; font-weight:700;">One-time Setup</div>
+            <div style="font-size:13px; color:var(--text2); margin-top:4px;">Murmur needs one permission to type into other apps.</div>
+          </div>
+          <div style="background:var(--s2); border-radius:10px; padding:12px 16px; margin-bottom:16px;">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-text">Click the button below</div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-text">Click the lock icon to make changes</div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-text">Find <strong>Murmur</strong> and toggle it <strong>ON</strong></div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-text">Come back — Murmur starts automatically</div>
+            </div>
+          </div>
+          <div class="open-btn">Open Accessibility Settings &nbsp;→</div>
+          <div class="status-waiting" style="margin-top:14px;">⏳&nbsp; Waiting for permission…</div>
+        </div>
+      </div>
+      <div class="mock-label">Waiting for permission</div>
+    </div>
+
+    <!-- Granted -->
+    <div class="col">
+      <div class="window" style="width:400px;">
+        <div class="titlebar">
+          <div class="tls"><div class="tl tl-r"></div><div class="tl tl-y"></div><div class="tl tl-g"></div></div>
+          <div class="titlebar-title">Murmur — Setup</div>
+        </div>
+        <div class="wbody" style="padding:24px 28px;">
+          <div style="text-align:center; margin-bottom:20px;">
+            <div style="margin-bottom:12px; display:flex; justify-content:center;">
+              <svg width="72" height="28" viewBox="0 0 96 32" fill="none">
+                <defs>
+                  <linearGradient id="wPerm" x1="0" y1="0" x2="96" y2="0" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#5ac8fa" stop-opacity="0.9"/>
+                    <stop offset="100%" stop-color="#0a84ff" stop-opacity="0.9"/>
+                  </linearGradient>
+                </defs>
+                <path d="M0 16 C12 16 12 4 24 4 C36 4 36 28 48 28 C60 28 60 4 72 4 C84 4 84 28 96 28"
+                      stroke="url(#wPerm)" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div style="font-size:16px; font-weight:700;">One-time Setup</div>
+            <div style="font-size:13px; color:var(--text2); margin-top:4px;">Murmur needs one permission to type into other apps.</div>
+          </div>
+          <div style="background:var(--s2); border-radius:10px; padding:12px 16px; margin-bottom:16px; opacity:0.5;">
+            <div class="step">
+              <div class="step-num" style="background:var(--green); color:white;">✓</div>
+              <div class="step-text">Click the button below</div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="background:var(--green); color:white;">✓</div>
+              <div class="step-text">Click the lock icon to make changes</div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="background:var(--green); color:white;">✓</div>
+              <div class="step-text">Find <strong>Murmur</strong> and toggle it <strong>ON</strong></div>
+            </div>
+            <div class="step">
+              <div class="step-num" style="background:var(--green); color:white;">✓</div>
+              <div class="step-text">Come back — Murmur starts automatically</div>
+            </div>
+          </div>
+          <div class="open-btn" style="opacity:0.4; pointer-events:none;">Open Accessibility Settings &nbsp;→</div>
+          <div class="status-granted" style="margin-top:14px; font-weight:600;">✓&nbsp; Permission granted! Starting Murmur…</div>
+        </div>
+      </div>
+      <div class="mock-label">Permission granted</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 5. SETTINGS WINDOW                                         -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">05 — Settings Window</div>
+  <div class="row">
+    <div class="col">
+      <div class="window" style="width:420px;">
+        <div class="titlebar">
+          <div class="tls"><div class="tl tl-r"></div><div class="tl tl-y"></div><div class="tl tl-g"></div></div>
+          <div class="titlebar-title">Murmur Settings</div>
+        </div>
+        <div class="wbody" style="padding:8px 20px 20px;">
+
+          <div style="font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); padding:16px 0 8px;">Input</div>
+          <div class="form-row">
+            <div class="form-label">Hotkey</div>
+            <div class="form-control">Right Option (⌥) <span class="chevron">⌄</span></div>
+          </div>
+          <div class="form-row">
+            <div class="form-label">Max duration</div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="form-input" style="text-align:center;">60</div>
+              <span style="font-size:13px; color:var(--text2);">seconds</span>
+            </div>
+          </div>
+
+          <div style="font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); padding:16px 0 8px;">Transcription</div>
+          <div class="form-row">
+            <div class="form-label">Whisper model</div>
+            <div class="form-control">turbo — 809 MB <span class="chevron">⌄</span></div>
+          </div>
+          <div class="form-row">
+            <div class="form-label">Language</div>
+            <div class="form-control">English <span class="chevron">⌄</span></div>
+          </div>
+
+          <div style="font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--text3); padding:16px 0 8px;">AI Cleanup</div>
+          <div class="form-row">
+            <div class="form-label">AI Cleanup</div>
+            <div style="display:flex; align-items:center; gap:10px; flex:1;">
+              <div class="toggle"><div class="toggle-knob"></div></div>
+              <span style="font-size:12px; color:var(--text2);">Fix punctuation, remove fillers, apply vocabulary</span>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-label">Model</div>
+            <div class="form-control">qwen2.5:1.5b <span class="chevron">⌄</span></div>
+          </div>
+
+          <div class="btn">Save</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 6. VOCABULARY WINDOW                                       -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">06 — Vocabulary Window · Feature #3</div>
+  <div class="row">
+    <div class="col">
+      <div class="window" style="width:620px;">
+        <div class="titlebar">
+          <div class="tls"><div class="tl tl-r"></div><div class="tl tl-y"></div><div class="tl tl-g"></div></div>
+          <div class="titlebar-title">Murmur — Vocabulary</div>
+        </div>
+        <div class="wbody" style="padding:0;">
+
+          <!-- Replacements section -->
+          <div class="vocab-section-header">
+            <span>Replacements &nbsp;<span style="color:var(--text3); font-weight:400; text-transform:none; letter-spacing:0;">Always applied</span></span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <input placeholder="Search…" style="background:var(--s2); border:1px solid var(--border); border-radius:6px; padding:4px 10px; font-size:12px; color:var(--text2); width:120px; outline:none;">
+            </div>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Whisper hears</th>
+                <th>Replace with</th>
+                <th>Category</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="color:var(--text2);">a p i</td>
+                <td><strong>API</strong></td>
+                <td><span class="badge badge-acronym">Acronym</span></td>
+                <td><span class="delete-btn">✕</span></td>
+              </tr>
+              <tr>
+                <td style="color:var(--text2);">l l m</td>
+                <td><strong>LLM</strong></td>
+                <td><span class="badge badge-acronym">Acronym</span></td>
+                <td><span class="delete-btn">✕</span></td>
+              </tr>
+              <tr>
+                <td style="color:var(--text2);">preetham</td>
+                <td><strong>Preetham</strong></td>
+                <td><span class="badge badge-name">Name</span></td>
+                <td><span class="delete-btn">✕</span></td>
+              </tr>
+              <tr>
+                <td style="color:var(--text2);">video chat bot</td>
+                <td><strong>VideoChatBot</strong></td>
+                <td><span class="badge badge-project">Project</span></td>
+                <td><span class="delete-btn">✕</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <!-- Add replacement row -->
+          <div class="add-row" style="padding:10px 10px;">
+            <input class="add-input" placeholder="Whisper hears…">
+            <input class="add-input" placeholder="Replace with…">
+            <select class="add-select">
+              <option>Acronym</option>
+              <option>Name</option>
+              <option>Project</option>
+            </select>
+            <button class="btn-add">+ Add</button>
+          </div>
+
+          <!-- Context Words section -->
+          <div class="vocab-section-header" style="margin-top:8px;">
+            <span>Context Words &nbsp;<span style="color:var(--text3); font-weight:400; text-transform:none; letter-spacing:0;">LLM decides based on sentence</span></span>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Word</th>
+                <th>Possible forms</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="color:var(--text2);">lamps</td>
+                <td>
+                  <span class="badge badge-context">lamps</span>
+                  &nbsp;
+                  <span class="badge badge-acronym">LAMS</span>
+                </td>
+                <td><span class="delete-btn">✕</span></td>
+              </tr>
+              <tr>
+                <td style="color:var(--text2);">python</td>
+                <td>
+                  <span class="badge badge-context">python</span>
+                  &nbsp;
+                  <span class="badge badge-project">Python</span>
+                </td>
+                <td><span class="delete-btn">✕</span></td>
+              </tr>
+              <tr>
+                <td style="color:var(--text2);">flow</td>
+                <td>
+                  <span class="badge badge-context">flow</span>
+                  &nbsp;
+                  <span class="badge badge-project">Flow</span>
+                </td>
+                <td><span class="delete-btn">✕</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <!-- Add context word row -->
+          <div class="add-row" style="padding:10px 10px;">
+            <input class="add-input" placeholder="Word Whisper hears…" style="max-width:160px;">
+            <input class="add-input" placeholder="Possible forms: lamps, LAMS">
+            <button class="btn-add">+ Add</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

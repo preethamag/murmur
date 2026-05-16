@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Murmur — Logo Concepts</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --s1: #1c1c1e;
+    --s2: #2c2c2e;
+    --border: rgba(255,255,255,0.08);
+    --text: #ffffff;
+    --text2: rgba(235,235,245,0.45);
+    --blue: #0a84ff;
+    --green: #30d158;
+    --purple: #bf5af2;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 56px 64px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1 { font-size: 36px; font-weight: 700; letter-spacing: -0.5px; }
+  .sub { font-size: 16px; color: var(--text2); margin-top: 6px; margin-bottom: 60px; }
+
+  /* ── Concept Card ─────────────────────────────────── */
+  .concepts { display: flex; flex-direction: column; gap: 48px; }
+
+  .concept {
+    background: var(--s1);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    padding: 36px 40px;
+    display: flex; gap: 48px; align-items: center;
+  }
+
+  .concept-name {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.10em;
+    text-transform: uppercase; color: var(--text2); margin-bottom: 8px;
+  }
+  .concept-desc {
+    font-size: 14px; color: var(--text2); max-width: 220px; line-height: 1.5;
+  }
+  .concept-meta { min-width: 220px; }
+
+  /* ── Size previews ───────────────────────────────── */
+  .sizes {
+    display: flex; align-items: center; gap: 40px; flex: 1;
+  }
+
+  .size-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+  }
+  .size-label { font-size: 11px; color: var(--text2); }
+
+  /* Dark swatch */
+  .swatch-dark {
+    background: #1c1c1e;
+    border-radius: 14px; border: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Menu bar preview */
+  .menubar-preview {
+    height: 36px; background: rgba(28,28,30,0.97);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 8px;
+    display: flex; align-items: center; padding: 0 12px;
+    gap: 8px; font-size: 13px; color: rgba(235,235,245,0.5);
+  }
+  .mb-icon {
+    width: 30px; height: 24px; border-radius: 5px;
+    background: rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Wordmark */
+  .wordmark {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .wordmark-text {
+    font-size: 22px; font-weight: 600; letter-spacing: -0.3px;
+  }
+
+  /* Gradient fills */
+  .grad-blue   { stop-color: #0a84ff; }
+  .grad-purple { stop-color: #bf5af2; }
+  .grad-green  { stop-color: #30d158; }
+  .grad-teal   { stop-color: #5ac8fa; }
+</style>
+</head>
+<body>
+
+<h1>Murmur — Logo Concepts</h1>
+<p class="sub">5 directions · each shown at large, small, and menu bar sizes</p>
+
+<div class="concepts">
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- A: WAVEFORM BARS                                       -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="concept">
+    <div class="concept-meta">
+      <div class="concept-name">A — Spectrum</div>
+      <div class="wordmark" style="margin: 14px 0 16px;">
+        <svg width="36" height="28" viewBox="0 0 44 32" fill="none">
+          <defs>
+            <linearGradient id="gA" x1="0" y1="0" x2="44" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#0a84ff"/>
+              <stop offset="100%" stop-color="#bf5af2"/>
+            </linearGradient>
+          </defs>
+          <rect x="0"  y="12" width="7" height="8"  rx="3.5" fill="url(#gA)"/>
+          <rect x="9"  y="3"  width="7" height="26" rx="3.5" fill="url(#gA)"/>
+          <rect x="18" y="8"  width="7" height="16" rx="3.5" fill="url(#gA)"/>
+          <rect x="27" y="0"  width="7" height="32" rx="3.5" fill="url(#gA)"/>
+          <rect x="36" y="10" width="7" height="12" rx="3.5" fill="url(#gA)"/>
+        </svg>
+        <span class="wordmark-text">Murmur</span>
+      </div>
+      <div class="concept-desc">5 spectrum bars — instantly recognisable as audio. Gradient adds energy. Scales perfectly to 16px.</div>
+    </div>
+
+    <div class="sizes">
+      <!-- Large -->
+      <div class="size-wrap">
+        <div class="swatch-dark" style="width:120px;height:120px;">
+          <svg width="80" height="62" viewBox="0 0 44 32" fill="none">
+            <defs><linearGradient id="gAL" x1="0" y1="0" x2="44" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#0a84ff"/><stop offset="100%" stop-color="#bf5af2"/>
+            </linearGradient></defs>
+            <rect x="0"  y="12" width="7" height="8"  rx="3.5" fill="url(#gAL)"/>
+            <rect x="9"  y="3"  width="7" height="26" rx="3.5" fill="url(#gAL)"/>
+            <rect x="18" y="8"  width="7" height="16" rx="3.5" fill="url(#gAL)"/>
+            <rect x="27" y="0"  width="7" height="32" rx="3.5" fill="url(#gAL)"/>
+            <rect x="36" y="10" width="7" height="12" rx="3.5" fill="url(#gAL)"/>
+          </svg>
+        </div>
+        <div class="size-label">Large</div>
+      </div>
+      <!-- Small -->
+      <div class="size-wrap">
+        <div class="swatch-dark" style="width:56px;height:56px;">
+          <svg width="28" height="22" viewBox="0 0 44 32" fill="none">
+            <defs><linearGradient id="gAS" x1="0" y1="0" x2="44" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#0a84ff"/><stop offset="100%" stop-color="#bf5af2"/>
+            </linearGradient></defs>
+            <rect x="0"  y="12" width="7" height="8"  rx="3.5" fill="url(#gAS)"/>
+            <rect x="9"  y="3"  width="7" height="26" rx="3.5" fill="url(#gAS)"/>
+            <rect x="18" y="8"  width="7" height="16" rx="3.5" fill="url(#gAS)"/>
+            <rect x="27" y="0"  width="7" height="32" rx="3.5" fill="url(#gAS)"/>
+            <rect x="36" y="10" width="7" height="12" rx="3.5" fill="url(#gAS)"/>
+          </svg>
+        </div>
+        <div class="size-label">Small</div>
+      </div>
+      <!-- Menu bar -->
+      <div class="size-wrap">
+        <div class="menubar-preview">
+          <span>9:41 AM</span>
+          <div class="mb-icon">
+            <svg width="16" height="12" viewBox="0 0 44 32" fill="none">
+              <defs><linearGradient id="gAM" x1="0" y1="0" x2="44" y2="0" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#0a84ff"/><stop offset="100%" stop-color="#bf5af2"/>
+              </linearGradient></defs>
+              <rect x="0"  y="12" width="7" height="8"  rx="3.5" fill="url(#gAM)"/>
+              <rect x="9"  y="3"  width="7" height="26" rx="3.5" fill="url(#gAM)"/>
+              <rect x="18" y="8"  width="7" height="16" rx="3.5" fill="url(#gAM)"/>
+              <rect x="27" y="0"  width="7" height="32" rx="3.5" fill="url(#gAM)"/>
+              <rect x="36" y="10" width="7" height="12" rx="3.5" fill="url(#gAM)"/>
+            </svg>
+          </div>
+        </div>
+        <div class="size-label">Menu bar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- B: SOUND RIPPLE                                        -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="concept">
+    <div class="concept-meta">
+      <div class="concept-name">B — Ripple</div>
+      <div class="wordmark" style="margin: 14px 0 16px;">
+        <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
+          <circle cx="5" cy="18" r="4" fill="white"/>
+          <path d="M13 10C20 10 24 13.8 24 18C24 22.2 20 26 13 26" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M18 4C29 4 34 10.5 34 18C34 25.5 29 32 18 32" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.4"/>
+        </svg>
+        <span class="wordmark-text">Murmur</span>
+      </div>
+      <div class="concept-desc">Sound emanating from a point — like a whisper or a voice. Directional, minimal. The arcs fade for depth.</div>
+    </div>
+
+    <div class="sizes">
+      <div class="size-wrap">
+        <div class="swatch-dark" style="width:120px;height:120px;">
+          <svg width="80" height="80" viewBox="0 0 36 36" fill="none">
+            <circle cx="5" cy="18" r="4" fill="white"/>
+            <path d="M13 10C20 10 24 13.8 24 18C24 22.2 20 26 13 26" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M18 4C29 4 34 10.5 34 18C34 25.5 29 32 18 32" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.4"/>
+          </svg>
+        </div>
+        <div class="size-label">Large</div>
+      </div>
+      <div class="size-wrap">
+        <div class="swatch-dark" style="width:56px;height:56px;">
+          <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
+            <circle cx="5" cy="18" r="4" fill="white"/>
+            <path d="M13 10C20 10 24 13.8 24 18C24 22.2 20 26 13 26" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M18 4C29 4 34 10.5 34 18C34 25.5 29 32 18 32" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.4"/>
+          </svg>
+        </div>
+        <div class="size-label">Small</div>
+      </div>
+      <div class="size-wrap">
+        <div class="menubar-preview">
+          <span>9:41 AM</span>
+          <div class="mb-icon">
+            <svg width="18" height="18" viewBox="0 0 36 36" fill="none">
+              <circle cx="5" cy="18" r="4" fill="white"/>
+              <path d="M13 10C20 10 24 13.8 24 18C24 22.2 20 26 13 26" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <path d="M18 4C29 4 34 10.5 34 18C34 25.5 29 32 18 32" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.4"/>
+            </svg>
+          </div>
+        </div>
+        <div class="size-label">Menu bar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- C: SINE WAVE                                           -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="concept">
+    <div class="concept-meta">
+      <div class="concept-name">C — Wave</div>
+      <div class="wordmark" style="margin: 14px 0 16px;">
+        <svg width="44" height="24" viewBox="0 0 48 24" fill="none">
+          <defs>
+            <linearGradient id="gC" x1="0" y1="0" x2="48" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#5ac8fa"/>
+              <stop offset="100%" stop-color="#0a84ff"/>
+            </linearGradient>
+          </defs>
+          <path d="M0 12 C6 12 6 3 12 3 C18 3 18 21 24 21 C30 21 30 3 36 3 C42 3 42 21 48 21"
+                stroke="url(#gC)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="wordmark-text">Murmur</span>
+      </div>
+      <div class="concept-desc">A single flowing sine wave — pure, elegant, unmistakably audio. Teal-to-blue gradient feels calm and modern.</div>
+    </div>
+
+    <div class="sizes">
+      <div class="size-wrap">
+        <div class="swatch-dark" style="width:120px;height:120px;">
+          <svg width="100" height="50" viewBox="0 0 48 24" fill="none">
+            <defs><linearGradient id="gCL" x1="0" y1="0" x2="48" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#5ac8fa"/><stop offset="100%" stop-color="#0a84ff"/>
+            </linearGradient></defs>
+            <path d="M0 12 C6 12 6 3 12 3 C18 3 18 21 24 21 C30 21 30 3 36 3 C42 3 42 21 48 21"
+                  stroke="url(#gCL)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="size-label">Large</div>
+      </div>
+      <div class="size-wrap">
+        <div class="swatch-dark" style="width:56px;height:56px;">
+          <svg width="40" height="20" viewBox="0 0 48 24" fill="none">
+            <defs><linearGradient id="gCS" x1="0" y1="0" x2="48" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#5ac8fa"/><stop offset="100%" stop-color="#0a84ff"/>
+            </linearGradient></defs>
+            <path d="M0 12 C6 12 6 3 12 3 C18 3 18 21 24 21 C30 21 30 3 36 3 C42 3 42 21 48 21"
+                  stroke="url(#gCS)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="size-label">Small</div>
+      </div>
+      <div class="size-wrap">
+        <div class="menubar-preview">
+          <span>9:41 AM</span>
+          <div class="mb-icon">
+            <svg width="22" height="11" viewBox="0 0 48 24" fill="none">
+              <defs><linearGradient id="gCM" x1="0" y1="0" x2="48" y2="0" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#5ac8fa"/><stop offset="100%" stop-color="#0a84ff"/>
+              </linearGradient></defs>
+              <path d="M0 12 C6 12 6 3 12 3 C18 3 18 21 24 21 C30 21 30 3 36 3 C42 3 42 21 48 21"
+                    stroke="url(#gCM)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="size-label">Menu bar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- D: VOICE PRINT (horizontal lines)                      -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="concept">
+    <div class="concept-meta">
+      <div class="concept-name">D — Voiceprint</div>
+      <div class="wordmark" style="margin: 14px 0 16px;">
+        <svg width="36" height="28" viewBox="0 0 40 28" fill="none">
+          <defs>
+            <linearGradient id="gD" x1="0" y1="0" x2="40" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#30d158"/>
+              <stop offset="100%" stop-color="#5ac8fa"/>
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0"  width="40" height="3" rx="1.5" fill="url(#gD)"/>
+          <rect x="0" y="6"  width="24" height="3" rx="1.5" fill="url(#gD)"/>
+          <rect x="0" y="12" width="34" height="3" rx="1.5" fill="url(#gD)"/>
+          <rect x="0" y="18" width="16" height="3" rx="1.5" fill="url(#gD)"/>
+          <rect x="0" y="25" width="28" height="3" rx="1.5" fill="url(#gD)"/>
+        </svg>
+        <span class="wordmark-text">Murmur</span>
+      </div>
+      <div class="concept-desc">Horizontal bars of varying widths — like a transcript, a voice print, or text forming. Unique and abstract.</div>
+    </div>
+
+    <div class="sizes">
+      <div class="size-wrap">
+        <div class="swatch-dark" style="width:120px;height:120px;">
+          <svg width="72" height="56" viewBox="0 0 40 28" fill="none">
+            <defs><linearGradient id="gDL" x1="0" y1="0" x2="40" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#30d158"/><stop offset="100%" stop-color="#5ac8fa"/>
+            </linearGradient></defs>
+            <rect x="0" y="0"  width="40" height="3" rx="1.5" fill="url(#gDL)"/>
+            <rect x="0" y="6"  width="24" height="3" rx="1.5" fill="url(#gDL)"/>
+            <rect x="0" y="12" width="34" height="3" rx="1.5" fill="url(#gDL)"/>
+            <rect x="0" y="18" width="16" height="3" rx="1.5" fill="url(#gDL)"/>
+            <rect x="0" y="25" width="28" height="3" rx="1.5" fill="url(#gDL)"/>
+          </svg>
+        </div>
+        <div class="size-label">Large</div>
+      </div>
+      <div class="size-wrap">
+        <div class="swatch-dark" style="width:56px;height:56px;">
+          <svg width="34" height="26" viewBox="0 0 40 28" fill="none">
+            <defs><linearGradient id="gDS" x1="0" y1="0" x2="40" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#30d158"/><stop offset="100%" stop-color="#5ac8fa"/>
+            </linearGradient></defs>
+            <rect x="0" y="0"  width="40" height="3" rx="1.5" fill="url(#gDS)"/>
+            <rect x="0" y="6"  width="24" height="3" rx="1.5" fill="url(#gDS)"/>
+            <rect x="0" y="12" width="34" height="3" rx="1.5" fill="url(#gDS)"/>
+            <rect x="0" y="18" width="16" height="3" rx="1.5" fill="url(#gDS)"/>
+            <rect x="0" y="25" width="28" height="3" rx="1.5" fill="url(#gDS)"/>
+          </svg>
+        </div>
+        <div class="size-label">Small</div>
+      </div>
+      <div class="size-wrap">
+        <div class="menubar-preview">
+          <span>9:41 AM</span>
+          <div class="mb-icon">
+            <svg width="18" height="14" viewBox="0 0 40 28" fill="none">
+              <defs><linearGradient id="gDM" x1="0" y1="0" x2="40" y2="0" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#30d158"/><stop offset="100%" stop-color="#5ac8fa"/>
+              </linearGradient></defs>
+              <rect x="0" y="0"  width="40" height="3" rx="1.5" fill="url(#gDM)"/>
+              <rect x="0" y="7"  width="24" height="3" rx="1.5" fill="url(#gDM)"/>
+              <rect x="0" y="14" width="34" height="3" rx="1.5" fill="url(#gDM)"/>
+              <rect x="0" y="21" width="16" height="3" rx="1.5" fill="url(#gDM)"/>
+              <rect x="0" y="28" width="28" height="3" rx="1.5" fill="url(#gDM)"/>
+            </svg>
+          </div>
+        </div>
+        <div class="size-label">Menu bar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- E: M MONOGRAM + DOT                                    -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="concept">
+    <div class="concept-meta">
+      <div class="concept-name">E — Monogram</div>
+      <div class="wordmark" style="margin: 14px 0 16px;">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <defs>
+            <linearGradient id="gE" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#bf5af2"/>
+              <stop offset="100%" stop-color="#0a84ff"/>
+            </linearGradient>
+          </defs>
+          <rect width="32" height="32" rx="8" fill="url(#gE)"/>
+          <path d="M7 24V10L13.5 19L16 22.5L18.5 19L25 10V24" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        <span class="wordmark-text">Murmur</span>
+      </div>
+      <div class="concept-desc">M lettermark in a rounded square — like Notion, Linear, Superhuman. Gradient from purple to blue. Timeless app icon format.</div>
+    </div>
+
+    <div class="sizes">
+      <div class="size-wrap">
+        <div class="swatch-dark" style="width:120px;height:120px;">
+          <svg width="80" height="80" viewBox="0 0 32 32" fill="none">
+            <defs><linearGradient id="gEL" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#bf5af2"/><stop offset="100%" stop-color="#0a84ff"/>
+            </linearGradient></defs>
+            <rect width="32" height="32" rx="8" fill="url(#gEL)"/>
+            <path d="M7 24V10L13.5 19L16 22.5L18.5 19L25 10V24" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="size-label">Large</div>
+      </div>
+      <div class="size-wrap">
+        <div class="swatch-dark" style="width:56px;height:56px;">
+          <svg width="34" height="34" viewBox="0 0 32 32" fill="none">
+            <defs><linearGradient id="gES" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#bf5af2"/><stop offset="100%" stop-color="#0a84ff"/>
+            </linearGradient></defs>
+            <rect width="32" height="32" rx="8" fill="url(#gES)"/>
+            <path d="M7 24V10L13.5 19L16 22.5L18.5 19L25 10V24" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="size-label">Small</div>
+      </div>
+      <div class="size-wrap">
+        <div class="menubar-preview">
+          <span>9:41 AM</span>
+          <div class="mb-icon" style="background:none; padding:0; width:auto;">
+            <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+              <defs><linearGradient id="gEM" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#bf5af2"/><stop offset="100%" stop-color="#0a84ff"/>
+              </linearGradient></defs>
+              <rect width="32" height="32" rx="8" fill="url(#gEM)"/>
+              <path d="M7 24V10L13.5 19L16 22.5L18.5 19L25 10V24" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+          </div>
+        </div>
+        <div class="size-label">Menu bar</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
