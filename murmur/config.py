@@ -36,8 +36,14 @@ def load():
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
         save(DEFAULTS)
         return DEFAULTS.copy()
-    with open(CONFIG_FILE) as f:
-        data = yaml.safe_load(f) or {}
+    try:
+        with open(CONFIG_FILE) as f:
+            data = yaml.safe_load(f) or {}
+        if not isinstance(data, dict):
+            data = {}
+    except (yaml.YAMLError, OSError):
+        # Corrupt or unreadable — fall back to defaults rather than crashing.
+        data = {}
     return {**DEFAULTS, **data}
 
 
@@ -45,3 +51,8 @@ def save(cfg):
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     with open(CONFIG_FILE, "w") as f:
         yaml.dump(cfg, f, default_flow_style=False)
+    if sys.platform != "win32":
+        try:
+            os.chmod(CONFIG_FILE, 0o600)
+        except OSError:
+            pass

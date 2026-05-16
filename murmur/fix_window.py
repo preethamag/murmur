@@ -5,6 +5,7 @@ with the original and auto-adds changed words to Vocabulary Replacements.
 """
 import sys
 import json
+import difflib
 import tkinter as tk
 from tkinter import ttk
 
@@ -12,6 +13,7 @@ from . import vocabulary as vocab_store
 from .config import CONFIG_DIR
 
 _LAST_FILE = CONFIG_DIR / ".last.json"
+_STRIP_CHARS = ".,!?;:\"'()[]{}"
 
 
 def _load_last():
@@ -23,15 +25,23 @@ def _load_last():
 
 
 def _diff_words(original: str, corrected: str) -> list[tuple[str, str]]:
-    """Return (wrong, right) pairs for words that changed."""
-    orig_words = original.split()
-    corr_words = corrected.split()
+    """Return (wrong, right) pairs for words that changed.
+
+    Uses SequenceMatcher so single-word inserts/deletes don't cascade-misalign
+    every subsequent word (which a naive zip would do).
+    """
+    orig = original.split()
+    corr = corrected.split()
     pairs = []
-    for o, c in zip(orig_words, corr_words):
-        o_clean = o.strip(".,!?;:\"'")
-        c_clean = c.strip(".,!?;:\"'")
-        if o_clean and c_clean and o_clean.lower() != c_clean.lower():
-            pairs.append((o_clean, c_clean))
+    matcher = difflib.SequenceMatcher(a=orig, b=corr, autojunk=False)
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        # Only treat 1↔1 replacements as a "correction" — multi-word edits
+        # are too ambiguous to safely auto-add as vocabulary rules.
+        if tag == "replace" and (i2 - i1) == 1 and (j2 - j1) == 1:
+            o_clean = orig[i1].strip(_STRIP_CHARS)
+            c_clean = corr[j1].strip(_STRIP_CHARS)
+            if o_clean and c_clean and o_clean.lower() != c_clean.lower():
+                pairs.append((o_clean, c_clean))
     return pairs
 
 

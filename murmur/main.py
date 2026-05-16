@@ -17,16 +17,23 @@ _LAST_FILE = config.CONFIG_DIR / ".last.json"
 class MurmurController:
     def __init__(self):
         self.cfg = config.load()
-        self._recorder = Recorder(self.cfg["sample_rate"], self.cfg.get("device"))
+        self._recorder = self._build_recorder()
         self._state = "idle"
+        self._session_id = 0           # bumped each new recording
+        self._state_lock = threading.Lock()
         self._set_state = lambda s: None  # replaced by tray after init
-        self._last_raw = ""
-        self._last_final = ""
 
         self._hotkey = HotkeyListener(
             self.cfg["hotkey"],
             on_press=self._on_press,
             on_release=self._on_release,
+        )
+
+    def _build_recorder(self):
+        return Recorder(
+            self.cfg["sample_rate"],
+            self.cfg.get("device"),
+            max_duration=self.cfg.get("max_duration", 60),
         )
 
     def start(self):
@@ -37,21 +44,54 @@ class MurmurController:
     # ── state ──────────────────────────────────────────────────────────────────
 
     def _set(self, state):
-        self._state = state
+        with self._state_lock:
+            self._state = state
         self._set_state(state)
 
     # ── recording helpers ───────────────────────────────────────────────────────
 
     def _start_recording(self):
-        self._set("recording")
+        # Atomic check-and-set so two fast hotkey events can't both start a recording.
+        with self._state_lock:
+            if self._state != "idle":
+                return None
+            self._state = "recording"
+            self._session_id += 1
+            session = self._session_id
+        self._set_state("recording")
+
+        try:
+            self._recorder.start()
+        except Exception as e:
+            print(f"[murmur] recorder failed to start: {e}", file=sys.stderr)
+            with self._state_lock:
+                self._state = "idle"
+            self._set_state("idle")
+            return None
+
         if self.cfg.get("sound_feedback", True):
             sounds.play_start()
-        self._recorder.start()
+        threading.Thread(
+            target=self._max_duration_watchdog, args=(session,), daemon=True
+        ).start()
+        return session
+
+    def _max_duration_watchdog(self, session):
+        max_dur = self.cfg.get("max_duration", 60)
+        time.sleep(max_dur)
+        # Only stop if THIS session is still recording — never clobber a later one.
+        with self._state_lock:
+            if self._state != "recording" or self._session_id != session:
+                return
+        self._stop_recording()
 
     def _stop_recording(self):
-        if self._state != "recording":
-            return
-        self._set("processing")
+        with self._state_lock:
+            if self._state != "recording":
+                return
+            self._state = "processing"
+        self._set_state("processing")
+
         if self.cfg.get("sound_feedback", True):
             sounds.play_stop()
         audio_path = self._recorder.stop()
@@ -66,10 +106,16 @@ class MurmurController:
 
     def _on_press(self):
         mode = self.cfg.get("input_mode", "hold")
+        # _start_recording returns the new session id (or None if a recording was
+        # already in progress). Only spawn the silence watchdog if WE actually
+        # started the recording.
+        session = None
         if self._state == "idle":
-            self._start_recording()
-            if mode == "tap":
-                threading.Thread(target=self._silence_watchdog, daemon=True).start()
+            session = self._start_recording()
+            if session is not None and mode == "tap":
+                threading.Thread(
+                    target=self._silence_watchdog, args=(session,), daemon=True
+                ).start()
         elif self._state == "recording" and mode == "tap":
             # Second tap = manual early stop
             self._stop_recording()
@@ -80,7 +126,7 @@ class MurmurController:
 
     # ── silence watchdog (tap mode only) ───────────────────────────────────────
 
-    def _silence_watchdog(self):
+    def _silence_watchdog(self, session):
         threshold = self.cfg.get("silence_threshold", 200)   # RMS energy
         silence_needed = self.cfg.get("silence_duration", 1.5)  # seconds
         min_record = 0.8  # always capture at least this long before checking
@@ -88,7 +134,10 @@ class MurmurController:
         time.sleep(min_record)
 
         silence_start = None
-        while self._state == "recording":
+        while True:
+            with self._state_lock:
+                if self._state != "recording" or self._session_id != session:
+                    return
             energy = self._recorder.current_energy()
             if energy < threshold:
                 if silence_start is None:
@@ -110,15 +159,15 @@ class MurmurController:
                 language=self.cfg["language"],
             )
             if raw:
-                self._last_raw = raw
                 text = raw
                 if self.cfg.get("punctuation_commands", True):
                     text = punctuation.apply(text)
                 vocab = vocabulary.load()
                 text = cleaner.clean(text, self.cfg, vocab)
-                self._last_final = text
                 self._save_last(raw, text)
                 injector.inject(text)
+        except Exception as e:
+            print(f"[murmur] transcription pipeline failed: {e}", file=sys.stderr)
         finally:
             try:
                 os.unlink(audio_path)
@@ -132,6 +181,10 @@ class MurmurController:
             _LAST_FILE.write_text(
                 json.dumps({"raw": raw, "final": final}), encoding="utf-8"
             )
+            try:
+                os.chmod(_LAST_FILE, 0o600)
+            except OSError:
+                pass
         except OSError:
             pass
 
@@ -169,7 +222,7 @@ class MurmurController:
     def _reload_config(self):
         self.cfg = config.load()
         launcher.set_enabled(self.cfg.get("launch_at_login", False))
-        self._recorder = Recorder(self.cfg["sample_rate"], self.cfg.get("device"))
+        self._recorder = self._build_recorder()
         self._hotkey.stop()
         self._hotkey = HotkeyListener(
             self.cfg["hotkey"],

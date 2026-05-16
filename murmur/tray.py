@@ -1,5 +1,4 @@
 import sys
-import threading
 
 ICONS = {"idle": "🎙", "recording": "🔴", "processing": "⏳"}
 
@@ -33,12 +32,6 @@ def _run_mac(app):
 
         def set_state(self, state):
             self.title = ICONS.get(state, ICONS["idle"])
-
-        def refresh_labels(self):
-            self.menu["Model: " + self._ctrl.cfg["model"]] and None  # noop guard
-            # Rebuild info items to reflect updated config
-            for item in list(self.menu._menu):
-                pass  # rumps doesn't support live label edits cleanly; reload on next open
 
         def _open_settings(self, _):
             self._ctrl.open_settings()

@@ -35,7 +35,11 @@ def _call_ollama(url, model, prompt):
         method="POST",
     )
     with urllib.request.urlopen(req, timeout=15) as resp:
-        return json.loads(resp.read())["response"].strip()
+        out = json.loads(resp.read()).get("response", "").strip()
+    # Strip wrapping quotes/code-fence the model sometimes adds.
+    if len(out) >= 2 and out[0] == out[-1] and out[0] in ('"', "'", "`"):
+        out = out[1:-1].strip()
+    return out
 
 
 def clean(text, cfg, vocabulary=None):
@@ -54,8 +58,11 @@ def clean(text, cfg, vocabulary=None):
     model = cfg.get("ollama_model", "qwen2.5:1.5b")
     vocab = vocabulary or {}
 
-    # Step 1: definite replacements (case-insensitive, whole-word)
-    for wrong, right in vocab.get("replacements", {}).items():
+    # Step 1: definite replacements (case-insensitive, whole-word).
+    # Sort by length descending so longer phrases match before their substrings
+    # (e.g. "new york city" before "new york").
+    replacements = vocab.get("replacements", {})
+    for wrong, right in sorted(replacements.items(), key=lambda kv: -len(kv[0])):
         result = re.sub(
             rf"\b{re.escape(wrong)}\b", right, result, flags=re.IGNORECASE
         )
@@ -63,9 +70,12 @@ def clean(text, cfg, vocabulary=None):
     if not cfg.get("ai_cleanup", False):
         return result
 
-    # Step 2: filler/grammar cleanup
+    # Step 2: filler/grammar cleanup. Keep the previous value if the model
+    # returns empty / fails — never replace good text with nothing.
     try:
-        result = _call_ollama(url, model, _CLEANUP_PROMPT.format(text=result))
+        cleaned = _call_ollama(url, model, _CLEANUP_PROMPT.format(text=result))
+        if cleaned:
+            result = cleaned
     except Exception:
         pass
 
@@ -77,9 +87,11 @@ def clean(text, cfg, vocabulary=None):
         )
         if vocab_str:
             try:
-                result = _call_ollama(url, model, _VOCAB_PROMPT.format(
+                corrected = _call_ollama(url, model, _VOCAB_PROMPT.format(
                     text=result, vocab=vocab_str
                 ))
+                if corrected:
+                    result = corrected
             except Exception:
                 pass
 

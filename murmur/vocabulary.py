@@ -9,6 +9,8 @@ Schema:
     - forms: [lamps, LAMS]
     - forms: [claude, Claude, CLAUDE]
 """
+import os
+import sys
 import yaml
 from .config import CONFIG_DIR
 
@@ -21,14 +23,25 @@ _EMPTY = {
 
 
 def load():
+    empty = {k: v.copy() if isinstance(v, dict) else list(v) for k, v in _EMPTY.items()}
     if not VOCAB_FILE.exists():
-        return {k: v.copy() if isinstance(v, dict) else list(v) for k, v in _EMPTY.items()}
-    with open(VOCAB_FILE) as f:
-        data = yaml.safe_load(f) or {}
-    return {**_EMPTY, **data}
+        return empty
+    try:
+        with open(VOCAB_FILE) as f:
+            data = yaml.safe_load(f) or {}
+        if not isinstance(data, dict):
+            data = {}
+    except (yaml.YAMLError, OSError):
+        return empty
+    return {**empty, **data}
 
 
 def save(vocab):
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     with open(VOCAB_FILE, "w") as f:
         yaml.dump(vocab, f, default_flow_style=False, allow_unicode=True)
+    if sys.platform != "win32":
+        try:
+            os.chmod(VOCAB_FILE, 0o600)
+        except OSError:
+            pass

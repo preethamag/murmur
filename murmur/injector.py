@@ -18,33 +18,48 @@ def inject(text: str):
 
 
 def _inject_mac(text: str):
-    # Save current clipboard
-    original = subprocess.run(["pbpaste"], capture_output=True, text=True).stdout
+    try:
+        original = subprocess.run(
+            ["pbpaste"], capture_output=True, text=True, timeout=2
+        ).stdout
+    except (subprocess.SubprocessError, OSError):
+        original = ""
 
-    # Set text
-    proc = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
-    proc.communicate(text.encode("utf-8"))
+    try:
+        proc = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
+        proc.communicate(text.encode("utf-8"), timeout=2)
 
-    # Cmd+V paste
-    with _kb.pressed(Key.cmd):
-        _kb.press("v")
-        _kb.release("v")
+        with _kb.pressed(Key.cmd):
+            _kb.press("v")
+            _kb.release("v")
 
-    time.sleep(0.15)
-
-    # Restore clipboard
-    proc = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
-    proc.communicate(original.encode("utf-8"))
+        time.sleep(0.15)
+    finally:
+        # Always restore clipboard even if paste failed
+        try:
+            proc = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
+            proc.communicate(original.encode("utf-8"), timeout=2)
+        except (subprocess.SubprocessError, OSError):
+            pass
 
 
 def _inject_win(text: str):
     import pyperclip
-    original = pyperclip.paste()
-    pyperclip.copy(text)
+    try:
+        original = pyperclip.paste() or ""
+    except Exception:
+        original = ""
 
-    with _kb.pressed(Key.ctrl):
-        _kb.press("v")
-        _kb.release("v")
+    try:
+        pyperclip.copy(text)
 
-    time.sleep(0.15)
-    pyperclip.copy(original)
+        with _kb.pressed(Key.ctrl):
+            _kb.press("v")
+            _kb.release("v")
+
+        time.sleep(0.15)
+    finally:
+        try:
+            pyperclip.copy(original)
+        except Exception:
+            pass

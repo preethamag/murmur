@@ -16,10 +16,13 @@ def list_input_devices() -> list[dict]:
 
 
 class Recorder:
-    def __init__(self, sample_rate=16000, device=None):
+    def __init__(self, sample_rate=16000, device=None, max_duration=60):
         self.sample_rate = sample_rate
         self.device = device   # None = system default; str = device name
+        self.max_duration = max_duration
         self._frames = []
+        self._frame_count = 0
+        self._max_frames = int(sample_rate * max_duration)
         self._recording = False
         self._lock = threading.Lock()
         self._stream = None
@@ -27,12 +30,19 @@ class Recorder:
     def start(self):
         with self._lock:
             self._frames = []
+            self._frame_count = 0
             self._recording = True
 
         def callback(indata, frame_count, time_info, status):
             with self._lock:
-                if self._recording:
-                    self._frames.append(indata.copy())
+                if not self._recording:
+                    return
+                # Hard cap on memory: drop frames past max_duration
+                if self._frame_count >= self._max_frames:
+                    self._recording = False
+                    return
+                self._frames.append(indata.copy())
+                self._frame_count += frame_count
 
         # Resolve device name → index if specified
         device_idx = None
@@ -64,8 +74,11 @@ class Recorder:
             self._recording = False
 
         if self._stream:
-            self._stream.stop()
-            self._stream.close()
+            try:
+                self._stream.stop()
+                self._stream.close()
+            except Exception:
+                pass
             self._stream = None
 
         with self._lock:

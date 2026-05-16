@@ -4,6 +4,7 @@ macOS  — writes/removes a LaunchAgent plist in ~/Library/LaunchAgents/
 Windows — writes/removes a registry value under HKCU Run key
 """
 import sys
+import subprocess
 import plistlib
 from pathlib import Path
 
@@ -40,8 +41,28 @@ def _mac_set(enabled: bool):
         _PLIST.parent.mkdir(parents=True, exist_ok=True)
         with open(_PLIST, "wb") as f:
             plistlib.dump(plist, f)
+        # bootstrap so it's active for this login session, not just future ones
+        try:
+            subprocess.run(
+                ["launchctl", "bootstrap", f"gui/{_uid()}", str(_PLIST)],
+                check=False, capture_output=True, timeout=3,
+            )
+        except (OSError, subprocess.SubprocessError):
+            pass
     else:
+        try:
+            subprocess.run(
+                ["launchctl", "bootout", f"gui/{_uid()}/com.murmur.app"],
+                check=False, capture_output=True, timeout=3,
+            )
+        except (OSError, subprocess.SubprocessError):
+            pass
         _PLIST.unlink(missing_ok=True)
+
+
+def _uid() -> int:
+    import os
+    return os.getuid()
 
 
 # ── Windows ────────────────────────────────────────────────────────────────────
