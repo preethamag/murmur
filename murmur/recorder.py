@@ -51,6 +51,14 @@ class Recorder:
         )
         self._stream.start()
 
+    def current_energy(self) -> float:
+        """RMS energy of the most recent audio chunk. Used for silence detection."""
+        with self._lock:
+            if not self._frames:
+                return 0.0
+            chunk = self._frames[-1].astype(np.float32)
+            return float(np.sqrt(np.mean(chunk ** 2)))
+
     def stop(self):
         with self._lock:
             self._recording = False

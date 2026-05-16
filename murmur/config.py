@@ -25,6 +25,9 @@ DEFAULTS = {
     "launch_at_login": False,
     "sound_feedback": True,
     "punctuation_commands": True,
+    "input_mode": "hold",       # "hold" = push-to-talk | "tap" = tap-to-start + auto-stop
+    "silence_threshold": 200,   # RMS energy below this = silence
+    "silence_duration": 1.5,    # seconds of silence before auto-stop
 }
 
 

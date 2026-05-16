@@ -24,8 +24,9 @@ def _run_mac(app):
                 rumps.MenuItem(f"Model: {controller.cfg['model']}"),
                 rumps.MenuItem(f"Hotkey: {controller.cfg['hotkey']}"),
                 None,
-                rumps.MenuItem("Settings",   callback=self._open_settings),
-                rumps.MenuItem("Vocabulary", callback=self._open_vocabulary),
+                rumps.MenuItem("Settings",              callback=self._open_settings),
+                rumps.MenuItem("Vocabulary",            callback=self._open_vocabulary),
+                rumps.MenuItem("Fix Last Transcription", callback=self._fix_last),
                 None,
                 rumps.MenuItem("Quit", callback=rumps.quit_application),
             ]
@@ -44,6 +45,9 @@ def _run_mac(app):
 
         def _open_vocabulary(self, _):
             self._ctrl.open_vocabulary()
+
+        def _fix_last(self, _):
+            self._ctrl.fix_last()
 
     mac_app = _MacApp(app)
     app._set_state = mac_app.set_state
@@ -74,9 +78,10 @@ def _run_win(app):
         title="Murmur",
         menu=pystray.Menu(
             pystray.MenuItem(f"Model: {app.cfg['model']}", None),
-            pystray.MenuItem("Settings",   lambda: app.open_settings()),
-            pystray.MenuItem("Vocabulary", lambda: app.open_vocabulary()),
-            pystray.MenuItem("Quit",       lambda: tray.stop()),
+            pystray.MenuItem("Settings",               lambda: app.open_settings()),
+            pystray.MenuItem("Vocabulary",             lambda: app.open_vocabulary()),
+            pystray.MenuItem("Fix Last Transcription", lambda: app.fix_last()),
+            pystray.MenuItem("Quit",                   lambda: tray.stop()),
         ),
     )
 

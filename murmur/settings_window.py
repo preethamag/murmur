@@ -12,6 +12,11 @@ from .recorder import list_input_devices
 
 # ── option maps ───────────────────────────────────────────────────────────────
 
+INPUT_MODES = [
+    ("Hold to talk  — hold hotkey while speaking, release to transcribe", "hold"),
+    ("Tap to talk   — tap once to start, silence auto-stops (Mode B)",   "tap"),
+]
+
 HOTKEYS = [
     ("Right Option (⌥)  — macOS default", "right_option"),
     ("Left Option (⌥)",                   "left_option"),
@@ -64,7 +69,7 @@ def _value_for(options, label):
 # ── window ────────────────────────────────────────────────────────────────────
 
 class SettingsWindow:
-    W, H = 460, 420
+    W, H = 480, 460
 
     def __init__(self):
         self.cfg = config.load()
@@ -101,51 +106,54 @@ class SettingsWindow:
         frame = tk.Frame(root, padx=8, pady=8)
         frame.pack(fill="both", expand=True)
 
-        self._row(frame, "Hotkey", 0)
-        self._hotkey_var = self._combo(frame, HOTKEYS, self.cfg["hotkey"], 0)
+        self._row(frame, "Input mode", 0)
+        self._mode_var = self._combo(frame, INPUT_MODES, self.cfg.get("input_mode", "hold"), 0)
 
-        self._row(frame, "Model", 1)
-        self._model_var = self._combo(frame, MODELS, self.cfg["model"], 1)
+        self._row(frame, "Hotkey", 1)
+        self._hotkey_var = self._combo(frame, HOTKEYS, self.cfg["hotkey"], 1)
 
-        self._row(frame, "Language", 2)
-        self._lang_var = self._combo(frame, LANGUAGES, self.cfg["language"], 2)
+        self._row(frame, "Model", 2)
+        self._model_var = self._combo(frame, MODELS, self.cfg["model"], 2)
+
+        self._row(frame, "Language", 3)
+        self._lang_var = self._combo(frame, LANGUAGES, self.cfg["language"], 3)
 
         # Microphone selector
-        self._row(frame, "Microphone", 3)
+        self._row(frame, "Microphone", 4)
         self._devices = [{"name": "System default", "index": None}] + list_input_devices()
         mic_labels = [d["name"] for d in self._devices]
         current_mic = self.cfg.get("device") or "System default"
         self._mic_var = tk.StringVar(value=current_mic if current_mic in mic_labels else "System default")
         mic_cb = ttk.Combobox(frame, textvariable=self._mic_var, values=mic_labels,
                               state="readonly", width=42)
-        mic_cb.grid(row=3, column=1, sticky="w", padx=(0, 16), pady=10)
+        mic_cb.grid(row=4, column=1, sticky="w", padx=(0, 16), pady=10)
 
-        self._row(frame, "Max duration", 4)
+        self._row(frame, "Max duration", 5)
         dur_frame = tk.Frame(frame)
-        dur_frame.grid(row=4, column=1, sticky="w", pady=10)
+        dur_frame.grid(row=5, column=1, sticky="w", pady=10)
         self._dur_var = tk.StringVar(value=str(self.cfg.get("max_duration", 60)))
         tk.Entry(dur_frame, textvariable=self._dur_var, width=6).pack(side="left")
         tk.Label(dur_frame, text=" seconds").pack(side="left")
 
-        self._row(frame, "AI Cleanup", 5)
+        self._row(frame, "AI Cleanup", 6)
         ai_frame = tk.Frame(frame)
-        ai_frame.grid(row=5, column=1, sticky="w", pady=10)
+        ai_frame.grid(row=6, column=1, sticky="w", pady=10)
         self._ai_var = tk.BooleanVar(value=self.cfg.get("ai_cleanup", False))
         tk.Checkbutton(
             ai_frame, variable=self._ai_var,
             text="Remove fillers & fix grammar  (requires Ollama)",
         ).pack(side="left")
 
-        self._row(frame, "Sound feedback", 6)
+        self._row(frame, "Sound feedback", 7)
         snd_frame = tk.Frame(frame)
-        snd_frame.grid(row=6, column=1, sticky="w", pady=10)
+        snd_frame.grid(row=7, column=1, sticky="w", pady=10)
         self._snd_var = tk.BooleanVar(value=self.cfg.get("sound_feedback", True))
         tk.Checkbutton(snd_frame, variable=self._snd_var,
                        text="Play tones on record start/stop").pack(side="left")
 
-        self._row(frame, "Launch at login", 7)
+        self._row(frame, "Launch at login", 8)
         login_frame = tk.Frame(frame)
-        login_frame.grid(row=7, column=1, sticky="w", pady=10)
+        login_frame.grid(row=8, column=1, sticky="w", pady=10)
         self._login_var = tk.BooleanVar(value=launcher.is_enabled())
         tk.Checkbutton(login_frame, variable=self._login_var,
                        text="Start Murmur automatically at login").pack(side="left")
@@ -163,6 +171,7 @@ class SettingsWindow:
         except ValueError:
             dur = 60
 
+        self.cfg["input_mode"]           = _value_for(INPUT_MODES, self._mode_var.get())
         self.cfg["hotkey"]               = _value_for(HOTKEYS,   self._hotkey_var.get())
         self.cfg["model"]                = _value_for(MODELS,    self._model_var.get())
         self.cfg["language"]             = _value_for(LANGUAGES, self._lang_var.get())
