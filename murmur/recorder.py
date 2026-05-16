@@ -13,7 +13,7 @@ class Recorder:
         self._lock = threading.Lock()
         self._stream = None
 
-    def start(self, on_level=None):
+    def start(self):
         with self._lock:
             self._frames = []
             self._recording = True
@@ -22,9 +22,6 @@ class Recorder:
             with self._lock:
                 if self._recording:
                     self._frames.append(indata.copy())
-            if on_level:
-                rms = np.sqrt(np.mean(indata.astype(np.float32) ** 2)) / 32768.0
-                on_level(min(1.0, rms * 12))   # scale so normal speech hits 0.5–0.9
 
         self._stream = sd.InputStream(
             samplerate=self.sample_rate,
