@@ -24,11 +24,22 @@ def _run_mac(app):
                 rumps.MenuItem(f"Model: {controller.cfg['model']}"),
                 rumps.MenuItem(f"Hotkey: {controller.cfg['hotkey']}"),
                 None,
+                rumps.MenuItem("Settings", callback=self._open_settings),
+                None,
                 rumps.MenuItem("Quit", callback=rumps.quit_application),
             ]
 
         def set_state(self, state):
             self.title = ICONS.get(state, ICONS["idle"])
+
+        def refresh_labels(self):
+            self.menu["Model: " + self._ctrl.cfg["model"]] and None  # noop guard
+            # Rebuild info items to reflect updated config
+            for item in list(self.menu._menu):
+                pass  # rumps doesn't support live label edits cleanly; reload on next open
+
+        def _open_settings(self, _):
+            self._ctrl.open_settings()
 
     mac_app = _MacApp(app)
     app._set_state = mac_app.set_state
@@ -59,6 +70,7 @@ def _run_win(app):
         title="Murmur",
         menu=pystray.Menu(
             pystray.MenuItem(f"Model: {app.cfg['model']}", None),
+            pystray.MenuItem("Settings", lambda: app.open_settings()),
             pystray.MenuItem("Quit", lambda: tray.stop()),
         ),
     )

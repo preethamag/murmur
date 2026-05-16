@@ -7,6 +7,7 @@ from . import config
 from .recorder import Recorder
 from .hotkey import HotkeyListener
 from . import injector, transcriber, tray
+from .settings_window import SettingsWindow
 
 
 class MurmurController:
@@ -97,6 +98,31 @@ class MurmurController:
                 pass
             self._overlay_send("hide")
             self._set("idle")
+
+    # ── settings ───────────────────────────────────────────────────────────────
+
+    def open_settings(self):
+        def _run():
+            proc = subprocess.Popen(
+                [sys.executable, "-m", "murmur.settings_window"],
+                text=True,
+            )
+            proc.wait()
+            if proc.returncode == 0:   # saved
+                self._reload_config()
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def _reload_config(self):
+        self.cfg = config.load()
+        # Restart hotkey listener with potentially new key
+        self._hotkey.stop()
+        self._hotkey = HotkeyListener(
+            self.cfg["hotkey"],
+            on_press=self._on_press,
+            on_release=self._on_release,
+        )
+        self._hotkey.start()
 
     def __del__(self):
         if self._overlay:
