@@ -21,6 +21,10 @@ DEFAULTS = {
     "ai_cleanup": False,
     "ollama_model": "qwen2.5:1.5b",
     "ollama_url": "http://localhost:11434",
+    "device": None,
+    "launch_at_login": False,
+    "sound_feedback": True,
+    "punctuation_commands": True,
 }
 
 

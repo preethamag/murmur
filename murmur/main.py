@@ -6,14 +6,14 @@ import threading
 from . import config
 from .recorder import Recorder
 from .hotkey import HotkeyListener
-from . import injector, transcriber, tray, permissions, cleaner, vocabulary
+from . import injector, transcriber, tray, permissions, cleaner, vocabulary, sounds, punctuation, launcher
 from .settings_window import SettingsWindow
 
 
 class MurmurController:
     def __init__(self):
         self.cfg = config.load()
-        self._recorder = Recorder(self.cfg["sample_rate"])
+        self._recorder = Recorder(self.cfg["sample_rate"], self.cfg.get("device"))
         self._state = "idle"
         self._set_state = lambda s: None  # replaced by tray after init
 
@@ -40,12 +40,16 @@ class MurmurController:
         if self._state != "idle":
             return
         self._set("recording")
+        if self.cfg.get("sound_feedback", True):
+            sounds.play_start()
         self._recorder.start()
 
     def _on_release(self):
         if self._state != "recording":
             return
         self._set("processing")
+        if self.cfg.get("sound_feedback", True):
+            sounds.play_stop()
         audio_path = self._recorder.stop()
 
         if not audio_path:
@@ -62,6 +66,8 @@ class MurmurController:
                 language=self.cfg["language"],
             )
             if text:
+                if self.cfg.get("punctuation_commands", True):
+                    text = punctuation.apply(text)
                 vocab = vocabulary.load()
                 text = cleaner.clean(text, self.cfg, vocab)
                 injector.inject(text)
@@ -97,6 +103,8 @@ class MurmurController:
 
     def _reload_config(self):
         self.cfg = config.load()
+        launcher.set_enabled(self.cfg.get("launch_at_login", False))
+        self._recorder = Recorder(self.cfg["sample_rate"], self.cfg.get("device"))
         self._hotkey.stop()
         self._hotkey = HotkeyListener(
             self.cfg["hotkey"],

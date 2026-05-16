@@ -5,9 +5,20 @@ import numpy as np
 import sounddevice as sd
 
 
+def list_input_devices() -> list[dict]:
+    """Returns input devices as [{"name": str, "index": int}, ...]."""
+    import sounddevice as sd
+    devices = []
+    for i, d in enumerate(sd.query_devices()):
+        if d["max_input_channels"] > 0:
+            devices.append({"name": d["name"], "index": i})
+    return devices
+
+
 class Recorder:
-    def __init__(self, sample_rate=16000):
+    def __init__(self, sample_rate=16000, device=None):
         self.sample_rate = sample_rate
+        self.device = device   # None = system default; str = device name
         self._frames = []
         self._recording = False
         self._lock = threading.Lock()
@@ -23,10 +34,19 @@ class Recorder:
                 if self._recording:
                     self._frames.append(indata.copy())
 
+        # Resolve device name → index if specified
+        device_idx = None
+        if self.device:
+            for d in list_input_devices():
+                if d["name"] == self.device:
+                    device_idx = d["index"]
+                    break
+
         self._stream = sd.InputStream(
             samplerate=self.sample_rate,
             channels=1,
             dtype="int16",
+            device=device_idx,
             callback=callback,
         )
         self._stream.start()

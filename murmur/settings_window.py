@@ -7,7 +7,8 @@ import sys
 import tkinter as tk
 from tkinter import ttk
 
-from . import config
+from . import config, launcher
+from .recorder import list_input_devices
 
 # ── option maps ───────────────────────────────────────────────────────────────
 
@@ -63,7 +64,7 @@ def _value_for(options, label):
 # ── window ────────────────────────────────────────────────────────────────────
 
 class SettingsWindow:
-    W, H = 420, 300
+    W, H = 460, 420
 
     def __init__(self):
         self.cfg = config.load()
@@ -109,21 +110,45 @@ class SettingsWindow:
         self._row(frame, "Language", 2)
         self._lang_var = self._combo(frame, LANGUAGES, self.cfg["language"], 2)
 
-        self._row(frame, "Max duration", 3)
+        # Microphone selector
+        self._row(frame, "Microphone", 3)
+        self._devices = [{"name": "System default", "index": None}] + list_input_devices()
+        mic_labels = [d["name"] for d in self._devices]
+        current_mic = self.cfg.get("device") or "System default"
+        self._mic_var = tk.StringVar(value=current_mic if current_mic in mic_labels else "System default")
+        mic_cb = ttk.Combobox(frame, textvariable=self._mic_var, values=mic_labels,
+                              state="readonly", width=42)
+        mic_cb.grid(row=3, column=1, sticky="w", padx=(0, 16), pady=10)
+
+        self._row(frame, "Max duration", 4)
         dur_frame = tk.Frame(frame)
-        dur_frame.grid(row=3, column=1, sticky="w", pady=10)
+        dur_frame.grid(row=4, column=1, sticky="w", pady=10)
         self._dur_var = tk.StringVar(value=str(self.cfg.get("max_duration", 60)))
         tk.Entry(dur_frame, textvariable=self._dur_var, width=6).pack(side="left")
         tk.Label(dur_frame, text=" seconds").pack(side="left")
 
-        self._row(frame, "AI Cleanup", 4)
+        self._row(frame, "AI Cleanup", 5)
         ai_frame = tk.Frame(frame)
-        ai_frame.grid(row=4, column=1, sticky="w", pady=10)
+        ai_frame.grid(row=5, column=1, sticky="w", pady=10)
         self._ai_var = tk.BooleanVar(value=self.cfg.get("ai_cleanup", False))
         tk.Checkbutton(
             ai_frame, variable=self._ai_var,
             text="Remove fillers & fix grammar  (requires Ollama)",
         ).pack(side="left")
+
+        self._row(frame, "Sound feedback", 6)
+        snd_frame = tk.Frame(frame)
+        snd_frame.grid(row=6, column=1, sticky="w", pady=10)
+        self._snd_var = tk.BooleanVar(value=self.cfg.get("sound_feedback", True))
+        tk.Checkbutton(snd_frame, variable=self._snd_var,
+                       text="Play tones on record start/stop").pack(side="left")
+
+        self._row(frame, "Launch at login", 7)
+        login_frame = tk.Frame(frame)
+        login_frame.grid(row=7, column=1, sticky="w", pady=10)
+        self._login_var = tk.BooleanVar(value=launcher.is_enabled())
+        tk.Checkbutton(login_frame, variable=self._login_var,
+                       text="Start Murmur automatically at login").pack(side="left")
 
         # Divider + Save
         ttk.Separator(root, orient="horizontal").pack(fill="x", pady=(0, 10))
@@ -138,11 +163,16 @@ class SettingsWindow:
         except ValueError:
             dur = 60
 
-        self.cfg["hotkey"]       = _value_for(HOTKEYS,    self._hotkey_var.get())
-        self.cfg["model"]        = _value_for(MODELS,     self._model_var.get())
-        self.cfg["language"]     = _value_for(LANGUAGES,  self._lang_var.get())
-        self.cfg["max_duration"] = dur
-        self.cfg["ai_cleanup"]   = self._ai_var.get()
+        self.cfg["hotkey"]               = _value_for(HOTKEYS,   self._hotkey_var.get())
+        self.cfg["model"]                = _value_for(MODELS,    self._model_var.get())
+        self.cfg["language"]             = _value_for(LANGUAGES, self._lang_var.get())
+        self.cfg["max_duration"]         = dur
+        self.cfg["ai_cleanup"]           = self._ai_var.get()
+        self.cfg["sound_feedback"]       = self._snd_var.get()
+        self.cfg["launch_at_login"]      = self._login_var.get()
+        self.cfg["punctuation_commands"] = True
+        mic = self._mic_var.get()
+        self.cfg["device"] = None if mic == "System default" else mic
 
         config.save(self.cfg)
         self._root.destroy()
