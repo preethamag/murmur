@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 import threading
 
 from . import config
@@ -14,6 +15,7 @@ class MurmurController:
         self._recorder = Recorder(self.cfg["sample_rate"])
         self._state = "idle"
         self._set_state = lambda s: None  # replaced by tray after init
+        self._overlay = None
 
         self._hotkey = HotkeyListener(
             self.cfg["hotkey"],
@@ -22,8 +24,30 @@ class MurmurController:
         )
 
     def start(self):
+        self._start_overlay()
         self._hotkey.start()
         tray.run_tray(self)  # blocks on main thread
+
+    # ── overlay subprocess ─────────────────────────────────────────────────────
+
+    def _start_overlay(self):
+        try:
+            self._overlay = subprocess.Popen(
+                [sys.executable, "-m", "murmur.overlay"],
+                stdin=subprocess.PIPE,
+                text=True,
+                bufsize=1,
+            )
+        except Exception:
+            self._overlay = None   # overlay is optional — don't crash if it fails
+
+    def _overlay_send(self, cmd: str):
+        if self._overlay and self._overlay.poll() is None:
+            try:
+                self._overlay.stdin.write(cmd + "\n")
+                self._overlay.stdin.flush()
+            except BrokenPipeError:
+                pass
 
     # ── state ──────────────────────────────────────────────────────────────────
 
@@ -37,15 +61,21 @@ class MurmurController:
         if self._state != "idle":
             return
         self._set("recording")
-        self._recorder.start()
+        self._overlay_send("recording")
+        self._recorder.start(on_level=self._on_level)
+
+    def _on_level(self, level: float):
+        self._overlay_send(f"level:{level:.3f}")
 
     def _on_release(self):
         if self._state != "recording":
             return
         self._set("processing")
+        self._overlay_send("processing")
         audio_path = self._recorder.stop()
 
         if not audio_path:
+            self._overlay_send("hide")
             self._set("idle")
             return
 
@@ -65,7 +95,12 @@ class MurmurController:
                 os.unlink(audio_path)
             except OSError:
                 pass
+            self._overlay_send("hide")
             self._set("idle")
+
+    def __del__(self):
+        if self._overlay:
+            self._overlay.terminate()
 
 
 def main():
