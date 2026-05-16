@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Murmur — Docs</title>
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #2a2a2a;
+      --accent: #7c6af7;
+      --accent-dim: #4b3fc7;
+      --text: #e8e8e8;
+      --muted: #888;
+      --code-bg: #141414;
+      --green: #3ecf6e;
+      --yellow: #f5c542;
+      --red: #e05c5c;
+      --sidebar-w: 230px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* ── Sidebar ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 32px 0;
+      overflow-y: auto;
+      z-index: 10;
+    }
+    .nav-logo {
+      padding: 0 20px 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .nav-logo-name {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+    .nav-logo-tag {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    nav a {
+      display: block;
+      padding: 7px 20px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      border-left: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    nav a:hover, nav a.active {
+      color: var(--text);
+      border-left-color: var(--accent);
+    }
+    nav .nav-section {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #555;
+      padding: 18px 20px 6px;
+    }
+
+    /* ── Main ── */
+    main {
+      margin-left: var(--sidebar-w);
+      padding: 60px 64px;
+      max-width: 900px;
+      flex: 1;
+    }
+
+    /* ── Sections ── */
+    section { margin-bottom: 80px; }
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    p { margin-bottom: 12px; color: #ccc; }
+    ul, ol { padding-left: 20px; margin-bottom: 12px; color: #ccc; }
+    li { margin-bottom: 5px; }
+
+    /* ── Hero ── */
+    .hero {
+      margin-bottom: 64px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-tag {
+      display: inline-block;
+      background: rgba(124, 106, 247, 0.15);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+    }
+    .hero p { font-size: 17px; max-width: 560px; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-left: 6px;
+    }
+    .badge-blue { background: rgba(124,106,247,0.2); color: var(--accent); }
+    .badge-green { background: rgba(62,207,110,0.15); color: var(--green); }
+    .badge-yellow { background: rgba(245,197,66,0.15); color: var(--yellow); }
+
+    /* ── Code ── */
+    code {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 13px;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      color: #c9d1d9;
+    }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 20px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+    }
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .comment { color: #555; }
+
+    /* ── Steps ── */
+    .steps { counter-reset: step; }
+    .step {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+    .step-body h3 { margin-bottom: 4px; }
+    .step-body p { margin-bottom: 6px; }
+
+    /* ── Install cards ── */
+    .install-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .install-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .install-card h3 { margin-bottom: 10px; font-size: 14px; }
+    .install-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: #bbb;
+    }
+    .install-item .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 7px;
+    }
+    .install-item .dim { color: #555; font-size: 12px; margin-top: 1px; }
+
+    /* ── Feature cards ── */
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 22px;
+      margin-bottom: 14px;
+    }
+    .feature-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .feature-icon {
+      font-size: 18px;
+      width: 32px;
+      text-align: center;
+    }
+    .feature-card p { font-size: 14px; margin-bottom: 0; color: #aaa; }
+
+    /* ── Hotkey table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    th {
+      text-align: left;
+      padding: 8px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #555;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #1f1f1f;
+      color: #bbb;
+      vertical-align: top;
+    }
+    td:first-child { color: var(--text); }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── FAQ ── */
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+      padding: 18px 0;
+    }
+    .faq-item:first-child { padding-top: 0; }
+    .faq-q {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .faq-a { font-size: 14px; color: #aaa; margin: 0; }
+
+    /* ── Callout ── */
+    .callout {
+      border-left: 3px solid var(--accent);
+      background: rgba(124,106,247,0.07);
+      border-radius: 0 6px 6px 0;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: #bbb;
+    }
+    .callout strong { color: var(--text); }
+    .callout.warn {
+      border-left-color: var(--yellow);
+      background: rgba(245,197,66,0.06);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 760px) {
+      nav { display: none; }
+      main { margin-left: 0; padding: 32px 24px; }
+      .install-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ─────────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-name">Murmur</div>
+    <div class="nav-logo-tag">Voice dictation for your Mac</div>
+  </div>
+
+  <div class="nav-section">Getting started</div>
+  <a href="#installation">Installation</a>
+  <a href="#setup">First-time setup</a>
+
+  <div class="nav-section">Reference</div>
+  <a href="#features">Features</a>
+  <a href="#guide">User guide</a>
+
+  <div class="nav-section">Help</div>
+  <a href="#faq">FAQs</a>
+</nav>
+
+<!-- ── Main ───────────────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-tag">v0.1.0 · Open source</div>
+    <h1>Murmur</h1>
+    <p>Offline voice dictation powered by local Whisper models. Hold a hotkey, speak, and your words appear — no cloud, no subscription, no mic always on.</p>
+  </div>
+
+  <!-- ── Installation ── -->
+  <section id="installation">
+    <h2>Installation</h2>
+
+    <p>Murmur requires <strong>Python 3.10+</strong>. The installer handles everything else — dependencies, model download, and optional AI cleanup.</p>
+
+    <div class="callout">
+      <strong>Recommended:</strong> Use the one-line installer. It walks you through model selection and sets up your config automatically.
+    </div>
+
+    <h3 style="margin-bottom:10px;">macOS</h3>
+    <pre><code><span class="comment"># Clone the repo</span>
+git clone https://github.com/preethamag/murmur.git
+cd murmur
+
+<span class="comment"># Run the installer (handles everything)</span>
+./install.sh</code></pre>
+
+    <h3 style="margin-bottom:10px;margin-top:20px;">Windows</h3>
+    <pre><code>git clone https://github.com/preethamag/murmur.git
+cd murmur
+install.bat</code></pre>
+
+    <h3 style="margin-bottom:12px;margin-top:28px;">What gets installed</h3>
+    <div class="install-grid">
+      <div class="install-card">
+        <h3>macOS (Apple Silicon)</h3>
+        <div class="install-item"><div class="dot"></div><div><div>sounddevice</div><div class="dim">Microphone capture + earcon playback</div></div></div>
+        <div class="install-item"><div class="dot"></div><div><div>mlx-whisper</div><div class="dim">Whisper on Apple Neural Engine — fast</div></div></div>
+        <div class="install-item"><div class="dot"></div><div><div>faster-whisper</div><div class="dim">Intel Mac fallback</div></div></div>
+        <div class="install-item"><div class="dot"></div><div><div>rumps</div><div class="dim">macOS menu bar tray icon</div></div></div>
+        <div class="install-item"><div class="dot"></div><div><div>pynput</div><div class="dim">Global hotkey listener</div></div></div>
+        <div class="install-item"><div class="dot"></div><div><div>pyyaml · numpy</div><div class="dim">Config + audio math</div></div></div>
+        <div class="install-item"><div class="dot"></div><div><div>Ollama + qwen2.5:1.5b <span class="badge badge-yellow">optional</span></div><div class="dim">AI cleanup &amp; vocabulary (~1 GB)</div></div></div>
+      </div>
+      <div class="install-card">
+        <h3>Windows</h3>
+        <div class="install-item"><div class="dot"></div><div><div>sounddevice</div><div class="dim">Microphone capture + earcon playback</div></div></div>
+        <div class="install-item"><div class="dot"></div><div><div>faster-whisper</div><div class="dim">CPU-optimised Whisper for Windows</div></div></div>
+        <div class="install-item"><div class="dot"></div><div><div>pystray + Pillow</div><div class="dim">Windows system tray icon</div></div></div>
+        <div class="install-item"><div class="dot"></div><div><div>pyperclip</div><div class="dim">Clipboard-based text injection</div></div></div>
+        <div class="install-item"><div class="dot"></div><div><div>pynput</div><div class="dim">Global hotkey listener</div></div></div>
+        <div class="install-item"><div class="dot"></div><div><div>pyyaml · numpy</div><div class="dim">Config + audio math</div></div></div>
+        <div class="install-item"><div class="dot"></div><div><div>Ollama + qwen2.5:1.5b <span class="badge badge-yellow">optional</span></div><div class="dim">AI cleanup &amp; vocabulary (~1 GB)</div></div></div>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:10px;margin-top:8px;">Whisper model sizes</h3>
+    <table>
+      <thead><tr><th>Model</th><th>Size</th><th>Speed</th><th>Accuracy</th></tr></thead>
+      <tbody>
+        <tr><td>tiny</td><td>75 MB</td><td>Fastest</td><td>Basic — good for quick notes</td></tr>
+        <tr><td>base</td><td>145 MB</td><td>Very fast</td><td>Good — solid daily driver</td></tr>
+        <tr><td>small</td><td>466 MB</td><td>Fast</td><td>Better — balanced</td></tr>
+        <tr><td>turbo <span class="badge badge-green">recommended</span></td><td>809 MB</td><td>Fast</td><td>Near-best — 8× faster than large</td></tr>
+        <tr><td>medium</td><td>1.5 GB</td><td>Moderate</td><td>High accuracy</td></tr>
+        <tr><td>large-v3</td><td>3.0 GB</td><td>Slower</td><td>Best — ideal for Apple Silicon</td></tr>
+      </tbody>
+    </table>
+
+    <p>Models are cached in <code>~/.cache/huggingface/</code> after first download and never re-downloaded.</p>
+
+    <h3 style="margin-bottom:10px;margin-top:20px;">Manual start</h3>
+    <pre><code>murmur
+<span class="comment"># or:</span>
+python3 -m murmur</code></pre>
+  </section>
+
+  <!-- ── First-time setup ── -->
+  <section id="setup">
+    <h2>First-time setup</h2>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Grant Accessibility permission <span class="badge badge-blue">macOS only</span></h3>
+          <p>On first launch Murmur shows an onboarding window explaining what's needed. Click <strong>Open Accessibility Settings</strong>, unlock the pane, find Murmur in the list, and toggle it on. Murmur detects the change and starts automatically — no restart needed.</p>
+          <div class="callout warn"><strong>Why it's needed:</strong> Murmur simulates Cmd+V to paste transcribed text. Without Accessibility access macOS blocks synthetic key events.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Grant Microphone permission</h3>
+          <p>macOS will prompt for microphone access the first time you press the hotkey. Click <strong>Allow</strong>. On Windows, no extra step is needed.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Murmur appears in the menu bar</h3>
+          <p>Look for <strong>🎙</strong> in the top-right menu bar (macOS) or the system tray (Windows). That icon is your status indicator — it changes as you record.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Try your first dictation</h3>
+          <p>Click in any text field anywhere on your Mac, then <strong>hold Right Option (⌥)</strong>, speak clearly, and release. The icon turns 🔴 while recording and ⏳ while transcribing. Your words appear at the cursor.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Adjust settings (optional)</h3>
+          <p>Click the 🎙 menu bar icon → <strong>Settings</strong> to change your hotkey, model, language, microphone, or input mode. All settings take effect immediately — no restart required.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:10px;">Config file location</h3>
+    <table>
+      <thead><tr><th>Platform</th><th>Path</th></tr></thead>
+      <tbody>
+        <tr><td>macOS</td><td><code>~/.murmur/config.yaml</code></td></tr>
+        <tr><td>Windows</td><td><code>%APPDATA%\Murmur\config.yaml</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── Features ── -->
+  <section id="features">
+    <h2>Features</h2>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <div class="feature-icon">🎙</div>
+        <h3>Hold-to-talk (Push-to-talk)</h3>
+        <span class="badge badge-green">Default mode</span>
+      </div>
+      <p>Hold your hotkey while speaking, release to transcribe. Recording stops the instant you let go, so there's never any silence to wait through. This is the fastest, most predictable way to dictate short bursts of text.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <div class="feature-icon">⏱</div>
+        <h3>Tap-to-talk with auto silence detection (Mode B)</h3>
+      </div>
+      <p>Tap the hotkey once to start recording; Murmur automatically stops when it detects a configurable period of silence (default 1.5 s). Tap again any time to stop early. Ideal for longer dictations where holding a key becomes tiring. Silence sensitivity is tunable in <code>config.yaml</code>.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <div class="feature-icon">🧠</div>
+        <h3>Local Whisper transcription</h3>
+      </div>
+      <p>All audio is transcribed on-device using OpenAI's Whisper model — nothing is sent to the internet. On Apple Silicon, Murmur automatically uses <code>mlx-whisper</code> for GPU-accelerated transcription; Intel Macs and Windows use <code>faster-whisper</code> with int8 quantisation. Six model sizes from tiny (75 MB) to large-v3 (3 GB) are available.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <div class="feature-icon">✨</div>
+        <h3>AI cleanup <span class="badge badge-yellow">requires Ollama</span></h3>
+      </div>
+      <p>Optionally runs transcribed text through a local <code>qwen2.5:1.5b</code> LLM via Ollama to remove filler words (um, uh, like, you know), fix grammar, and polish capitalisation — turning raw dictation into clean written prose. Completely offline. Toggle in Settings → AI Cleanup.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <div class="feature-icon">📖</div>
+        <h3>Vocabulary replacements</h3>
+      </div>
+      <p>Define exact word substitutions that are always applied after transcription. For example: Murmur hears "dont" → types "don't", or "dave it" → "David". Rules are applied longest-match-first so phrases like "New York City" are matched before "New York". Managed via the Vocabulary menu.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <div class="feature-icon">🔤</div>
+        <h3>Context-aware vocabulary <span class="badge badge-yellow">requires Ollama</span></h3>
+      </div>
+      <p>For words with multiple correct forms (e.g. "lamps / LAMS / Lams", "claude / Claude / CLAUDE"), list the alternatives and the LLM picks the right form based on surrounding sentence context. Unlike simple replacements, context words use AI to distinguish usage rather than blindly substituting.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <div class="feature-icon">🔁</div>
+        <h3>Fix Last Transcription &amp; auto-learn</h3>
+      </div>
+      <p>After any dictation, click <strong>Fix Last Transcription</strong> in the menu to open a small editor showing what was typed. Make corrections and click Save — Murmur diffs your changes word-by-word and automatically adds corrected words to your Vocabulary Replacements. Your personal vocabulary grows passively as you work.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <div class="feature-icon">🖊</div>
+        <h3>Punctuation commands</h3>
+      </div>
+      <p>Say punctuation aloud and Murmur converts it: "comma" → <code>,</code>, "period" → <code>.</code>, "new paragraph" → two line breaks, "open quote" / "close quote" → curly quotes, "em dash" → —, and 30+ more. Longer phrases match before shorter ones so "exclamation point" works correctly alongside "period".</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <div class="feature-icon">🔊</div>
+        <h3>Sound feedback</h3>
+      </div>
+      <p>Optional earcon tones confirm recording start (ascending C5→E5) and stop (descending E5→C5). Tones are synthesised in-process with numpy — no audio files needed. Playback runs on a daemon thread so it never delays the hotkey response. Toggle in Settings → Sound feedback.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <div class="feature-icon">🎚</div>
+        <h3>Microphone selector</h3>
+      </div>
+      <p>Choose any connected input device from the Settings dropdown rather than relying on the system default. Useful if you have multiple mics — a podcast mic for dictation, a headset for calls — and want Murmur to always use a specific one regardless of your system preference.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <div class="feature-icon">🌐</div>
+        <h3>Multi-language support</h3>
+      </div>
+      <p>Whisper supports 99+ languages. In Settings you can pin a language (English, Spanish, French, German, Japanese, Chinese, and more) or set it to Auto-detect, where Whisper identifies the spoken language automatically. The language setting applies to transcription only — the app UI stays in English.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <div class="feature-icon">🔑</div>
+        <h3>Configurable hotkey</h3>
+      </div>
+      <p>Choose from Right Option (⌥), Left Option, Right Ctrl, Left Ctrl, F4, F5, or F6 as your trigger key. The hotkey listener runs on a daemon thread and listens globally — it works when any app is in focus. Changes take effect immediately when saved from Settings.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <div class="feature-icon">🚀</div>
+        <h3>Launch at login</h3>
+      </div>
+      <p>Toggle <strong>Launch at login</strong> in Settings to register Murmur as a login item. On macOS this writes a LaunchAgent plist and bootstraps it immediately via <code>launchctl</code>. On Windows it writes to the HKCU registry Run key. Disabling removes the entry and stops the background agent instantly.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-header">
+        <div class="feature-icon">⏰</div>
+        <h3>Max recording duration</h3>
+      </div>
+      <p>A configurable hard cap (default 60 seconds) stops recording automatically even if you forget to release the hotkey or silence never triggers. This prevents the audio buffer from growing indefinitely and caps RAM usage to a predictable ceiling. Adjustable in Settings → Max duration.</p>
+    </div>
+  </section>
+
+  <!-- ── User guide ── -->
+  <section id="guide">
+    <h2>User guide</h2>
+
+    <h3 style="margin-bottom:12px;">Menu bar states</h3>
+    <table>
+      <thead><tr><th>Icon</th><th>State</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>🎙</td><td>Idle</td><td>Ready to record. Hotkey is active.</td></tr>
+        <tr><td>🔴</td><td>Recording</td><td>Listening to your mic.</td></tr>
+        <tr><td>⏳</td><td>Processing</td><td>Transcribing audio. Do not type yet — text is about to be injected.</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-bottom:12px;margin-top:28px;">Recording modes</h3>
+    <table>
+      <thead><tr><th>Mode</th><th>How to use</th><th>Best for</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Hold-to-talk</td>
+          <td>Hold hotkey → speak → release</td>
+          <td>Short, quick insertions. Maximum control.</td>
+        </tr>
+        <tr>
+          <td>Tap-to-talk</td>
+          <td>Tap hotkey → speak → silence auto-stops<br>or tap again to stop early</td>
+          <td>Longer passages, emails, paragraphs.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-bottom:12px;margin-top:28px;">Vocabulary manager</h3>
+    <p>Open <strong>🎙 → Vocabulary</strong> to manage two lists:</p>
+    <ul>
+      <li><strong>Replacements</strong> — Word-for-word substitutions always applied. E.g. "dont" → "don't". Add, remove, or edit rows. Saved immediately when you click Save.</li>
+      <li><strong>Context Words</strong> — Groups of alternative forms for the AI to choose between. E.g. add a group "lamps, LAMS" and the LLM will use whichever form fits the sentence. Requires AI Cleanup to be enabled.</li>
+    </ul>
+
+    <h3 style="margin-bottom:12px;margin-top:28px;">Fixing and teaching Murmur</h3>
+    <p>After dictating, if Murmur misheard something:</p>
+    <ol>
+      <li>Click <strong>🎙 → Fix Last Transcription</strong></li>
+      <li>The window shows what was typed. Edit any mistakes directly.</li>
+      <li>Click <strong>Save &amp; Learn</strong>. Murmur diffs the changes and adds corrected words to Vocabulary Replacements automatically.</li>
+    </ol>
+    <p>You can also make corrections directly inline (just retype the word) — Fix Last only helps if you want Murmur to remember the correction for next time.</p>
+
+    <h3 style="margin-bottom:12px;margin-top:28px;">Punctuation you can speak</h3>
+    <table>
+      <thead><tr><th>Say</th><th>Gets</th><th>Say</th><th>Gets</th></tr></thead>
+      <tbody>
+        <tr><td>"comma"</td><td><code>,</code></td><td>"period" / "full stop"</td><td><code>.</code></td></tr>
+        <tr><td>"question mark"</td><td><code>?</code></td><td>"exclamation point"</td><td><code>!</code></td></tr>
+        <tr><td>"colon"</td><td><code>:</code></td><td>"semicolon"</td><td><code>;</code></td></tr>
+        <tr><td>"em dash"</td><td><code>—</code></td><td>"hyphen"</td><td><code>-</code></td></tr>
+        <tr><td>"open quote"</td><td><code>"</code></td><td>"close quote"</td><td><code>"</code></td></tr>
+        <tr><td>"open paren"</td><td><code>(</code></td><td>"close paren"</td><td><code>)</code></td></tr>
+        <tr><td>"new line"</td><td>↵</td><td>"new paragraph"</td><td>↵↵</td></tr>
+        <tr><td>"ellipsis"</td><td><code>…</code></td><td>"at sign"</td><td><code>@</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-bottom:12px;margin-top:28px;">Tips</h3>
+    <ul>
+      <li>Speak at a natural pace. Whisper handles normal conversational speech well; over-enunciating can hurt accuracy.</li>
+      <li>Start with the <code>turbo</code> model. It offers near-large-v3 accuracy at a fraction of the latency.</li>
+      <li>In tap mode, pause naturally at the end of your sentence — the 1.5 s silence window starts counting from your last word.</li>
+      <li>Vocabulary replacements are case-insensitive and whole-word, so "dont" won't accidentally match "don't already".</li>
+      <li>If Murmur consistently mishears a proper noun, add it to Vocabulary Replacements and it will always be corrected silently.</li>
+    </ul>
+  </section>
+
+  <!-- ── FAQ ── -->
+  <section id="faq">
+    <h2>FAQs</h2>
+
+    <div class="faq-item">
+      <div class="faq-q">Does Murmur send audio or text to the internet?</div>
+      <p class="faq-a">No. Audio is transcribed entirely on-device using local Whisper models. If AI Cleanup is enabled, text is sent to a locally running Ollama instance — still 100% offline. Nothing leaves your machine at any point.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Why does Murmur need Accessibility permission?</div>
+      <p class="faq-a">Murmur injects text by briefly setting your clipboard and simulating Cmd+V (macOS) or Ctrl+V (Windows). macOS requires Accessibility access to send synthetic key events to other applications. Without it, the paste step is blocked by the OS.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">How much RAM does Murmur use?</div>
+      <p class="faq-a">The app shell itself uses ~30–50 MB. The Whisper model is loaded once into RAM on first use: tiny ≈75 MB, base ≈145 MB, turbo ≈810 MB, large-v3 ≈3 GB. Add ~1 GB if Ollama is running with qwen2.5:1.5b. The model stays in memory for the lifetime of the app so subsequent transcriptions are instant.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">How long does transcription take?</div>
+      <p class="faq-a">On Apple Silicon with <code>mlx-whisper</code> and the turbo model, a 10-second clip transcribes in under 2 seconds. On Intel hardware with <code>faster-whisper</code>, expect 3–6 seconds for the same clip. The first transcription is slightly slower as the model loads into memory.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Can I switch models without reinstalling?</div>
+      <p class="faq-a">Yes. Open Settings → Model, choose a different size, and click Save. The new model downloads automatically on first use and is cached for future sessions. The old model stays cached too (in <code>~/.cache/huggingface/</code>) — delete it manually if you need to free disk space.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Murmur typed in the wrong app — what happened?</div>
+      <p class="faq-a">Murmur injects text into whichever window has keyboard focus at the moment transcription finishes (not when you start recording). If you switch apps during the ⏳ processing phase the text will follow focus. Simply click back in the field you intended before releasing the hotkey or wait until the tray returns to 🎙.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Tap mode isn't stopping — what should I adjust?</div>
+      <p class="faq-a">The default silence threshold is an RMS energy value of 200. If you're in a noisy environment, background noise may keep the energy above the threshold. Lower <code>silence_threshold</code> in <code>~/.murmur/config.yaml</code> or increase <code>silence_duration</code> from 1.5 seconds. You can also tap the hotkey a second time to stop manually at any point.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Does AI Cleanup change the meaning of what I said?</div>
+      <p class="faq-a">It's designed only to remove fillers and fix minor grammar — not rewrite meaning. The local <code>qwen2.5:1.5b</code> model is prompted explicitly to output only the cleaned text. If the model returns an empty result, Murmur falls back to the original transcription. That said, AI is imperfect — use Fix Last Transcription to correct and teach Murmur if cleanup ever goes wrong.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">My clipboard keeps getting wiped — is that Murmur?</div>
+      <p class="faq-a">Murmur saves your clipboard before injecting text, then restores it immediately after. Under normal circumstances you won't notice. If something fails mid-injection (e.g. <code>pbcopy</code> times out), the restore still runs inside a <code>finally</code> block. If you notice clipboard loss, check that no other clipboard manager is competing with Murmur at the same instant.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">How do I uninstall Murmur?</div>
+      <p class="faq-a">Quit Murmur from the menu bar, then: <code>pip uninstall murmur</code>. Remove config with <code>rm -rf ~/.murmur</code>. Disable login item first in Settings if you had it enabled. Cached Whisper models live in <code>~/.cache/huggingface/</code> — delete that folder to free disk space.</p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Highlight active nav link on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('nav a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector(`nav a[href="#${e.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
