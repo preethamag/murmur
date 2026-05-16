@@ -6,7 +6,7 @@ import threading
 from . import config
 from .recorder import Recorder
 from .hotkey import HotkeyListener
-from . import injector, transcriber, tray
+from . import injector, transcriber, tray, permissions
 from .settings_window import SettingsWindow
 
 
@@ -25,6 +25,7 @@ class MurmurController:
         )
 
     def start(self):
+        permissions.check()        # blocks until accessibility granted
         self._start_overlay()
         self._hotkey.start()
         tray.run_tray(self)  # blocks on main thread
