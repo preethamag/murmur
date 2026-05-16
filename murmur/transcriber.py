@@ -1,9 +1,25 @@
 import sys
 import platform
 
+_MLX_IDS = {
+    "turbo": "mlx-community/whisper-large-v3-turbo-mlx",
+}
+_FASTER_IDS = {
+    "turbo": "large-v3-turbo",
+}
+
+# Cached model instances — keyed by (backend, model_name)
+_cache: dict = {}
+
 
 def _is_apple_silicon():
     return sys.platform == "darwin" and platform.machine() == "arm64"
+
+def _mlx_model_id(model):
+    return _MLX_IDS.get(model, f"mlx-community/whisper-{model}-mlx")
+
+def _faster_model_id(model):
+    return _FASTER_IDS.get(model, model)
 
 
 def transcribe(audio_path: str, model: str = "base", language: str = "en") -> str:
@@ -23,27 +39,12 @@ def transcribe(audio_path: str, model: str = "base", language: str = "en") -> st
     return _transcribe_openai(audio_path, model, lang)
 
 
-# Maps friendly model names to their HuggingFace / faster-whisper IDs
-_MLX_IDS = {
-    "turbo": "mlx-community/whisper-large-v3-turbo-mlx",
-}
-_FASTER_IDS = {
-    "turbo": "large-v3-turbo",
-}
-
-def _mlx_model_id(model):
-    return _MLX_IDS.get(model, f"mlx-community/whisper-{model}-mlx")
-
-def _faster_model_id(model):
-    return _FASTER_IDS.get(model, model)
-
-
 def _transcribe_mlx(audio_path, model, lang):
     import mlx_whisper
-    model_id = _mlx_model_id(model)
+    # mlx_whisper caches internally via HuggingFace; call is idempotent
     result = mlx_whisper.transcribe(
         audio_path,
-        path_or_hq_model=model_id,
+        path_or_hq_model=_mlx_model_id(model),
         language=lang,
     )
     return result["text"].strip()
@@ -51,14 +52,20 @@ def _transcribe_mlx(audio_path, model, lang):
 
 def _transcribe_faster(audio_path, model, lang):
     from faster_whisper import WhisperModel
-    wm = WhisperModel(_faster_model_id(model), compute_type="int8")
+    key = ("faster", model)
+    if key not in _cache:
+        _cache[key] = WhisperModel(_faster_model_id(model), compute_type="int8")
+    wm = _cache[key]
     segments, _ = wm.transcribe(audio_path, language=lang)
     return " ".join(s.text for s in segments).strip()
 
 
 def _transcribe_openai(audio_path, model, lang):
     import whisper
-    wm = whisper.load_model(model)
+    key = ("openai", model)
+    if key not in _cache:
+        _cache[key] = whisper.load_model(model)
+    wm = _cache[key]
     kwargs = {"language": lang} if lang else {}
     result = wm.transcribe(audio_path, **kwargs)
     return result["text"].strip()
