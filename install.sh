@@ -12,6 +12,31 @@ echo ""
 echo "  Open-source voice dictation — powered by local Whisper"
 echo ""
 
+# ── Install location ──────────────────────────────────────────────────────────
+# If the script is being run from inside the repo already, stay here.
+# Otherwise clone the repo to ~/Applications/Murmur so the app always
+# lives in a predictable, permanent location.
+INSTALL_DIR="$HOME/Applications/Murmur"
+
+if [ ! -f "$(dirname "$0")/pyproject.toml" ]; then
+  echo "  Installing Murmur to: $INSTALL_DIR"
+  echo ""
+  if [ -d "$INSTALL_DIR/.git" ]; then
+    echo "  Existing installation found — updating…"
+    git -C "$INSTALL_DIR" pull --ff-only
+  else
+    mkdir -p "$HOME/Applications"
+    git clone https://github.com/preethamag/murmur.git "$INSTALL_DIR"
+  fi
+  cd "$INSTALL_DIR"
+else
+  # Running from inside the repo (developer / manual clone)
+  cd "$(dirname "$0")"
+  INSTALL_DIR="$(pwd)"
+  echo "  Installing from: $INSTALL_DIR"
+  echo ""
+fi
+
 # ── Python check ──────────────────────────────────────────────────────────────
 if ! command -v python3 &>/dev/null; then
   echo "Error: Python 3.10+ required. Install from https://python.org"
@@ -136,7 +161,7 @@ with wave.open(tmp.name, "wb") as wf:
     wf.setnchannels(1); wf.setsampwidth(2); wf.setframerate(16000)
     wf.writeframes(struct.pack("<h", 0) * 16000)
 try:
-    mlx_whisper.transcribe(tmp.name, path_or_hq_model="$MLX_ID")
+    mlx_whisper.transcribe(tmp.name, path_or_hf_repo="$MLX_ID")
 except Exception:
     pass
 finally:
@@ -158,15 +183,28 @@ print("  Model ready.")
 PYEOF
 fi
 
+PYTHON_BIN=$(basename "$(command -v python3)")
+
 echo ""
-echo "  ✓ Murmur installed with model: $MODEL"
+echo "  ✓ Murmur installed to: $INSTALL_DIR"
+echo "  ✓ Whisper model: $MODEL"
 echo ""
-echo "  Run:     murmur"
+echo "  ─────────────────────────────────────────────────────"
+echo "  Run Murmur:"
 echo ""
-echo "  First launch — grant these permissions when prompted:"
-echo "    • Microphone  →  System Settings › Privacy › Microphone"
-echo "    • Accessibility  →  System Settings › Privacy › Accessibility"
+echo "      murmur"
 echo ""
-echo "  Default hotkey: hold Right Option (⌥) to record, release to transcribe."
-echo "  Config: ~/.murmur/config.yaml"
+echo "  ─────────────────────────────────────────────────────"
+echo "  First launch — a setup screen will guide you through:"
+echo ""
+echo "    1. Grant Microphone access when macOS prompts"
+echo "    2. Grant Accessibility access:"
+echo "         System Settings › Privacy & Security › Accessibility"
+echo ""
+echo "  ⚠  IMPORTANT: In the Accessibility list, Murmur appears"
+echo "     as \"$PYTHON_BIN\" — not as Murmur. Add that entry."
+echo ""
+echo "  ─────────────────────────────────────────────────────"
+echo "  Default hotkey: hold Right Option (⌥) while speaking"
+echo "  Config file:    ~/.murmur/config.yaml"
 echo ""
