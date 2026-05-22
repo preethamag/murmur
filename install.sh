@@ -185,6 +185,21 @@ fi
 
 PYTHON_BIN=$(basename "$(command -v python3)")
 
+# Determine which Whisper ID was actually downloaded
+if [ "$ARCH" = "arm64" ]; then
+  if [ "$MODEL" = "turbo" ]; then
+    WHISPER_ID="mlx-community/whisper-large-v3-turbo-mlx"
+  else
+    WHISPER_ID="mlx-community/whisper-${MODEL}-mlx"
+  fi
+else
+  if [ "$MODEL" = "turbo" ]; then
+    WHISPER_ID="large-v3-turbo"
+  else
+    WHISPER_ID="$MODEL"
+  fi
+fi
+
 echo ""
 echo "  ✓ Murmur installed to: $INSTALL_DIR"
 echo "  ✓ Whisper model: $MODEL"
@@ -207,4 +222,70 @@ echo ""
 echo "  ─────────────────────────────────────────────────────"
 echo "  Default hotkey: hold Right Option (⌥) while speaking"
 echo "  Config file:    ~/.murmur/config.yaml"
+echo ""
+
+# ── Standalone model usage instructions ───────────────────────────────────────
+echo ""
+echo "  ╔═════════════════════════════════════════════════════════════╗"
+echo "  ║  💡  Your models work outside Murmur too                   ║"
+echo "  ║      Copy or save the instructions below.                  ║"
+echo "  ╚═════════════════════════════════════════════════════════════╝"
+echo ""
+echo "  ── Whisper  (speech → text) ──────────────────────────────────"
+echo ""
+if [ "$ARCH" = "arm64" ]; then
+echo "  Apple Silicon — mlx-whisper (fastest):"
+echo ""
+echo "      import mlx_whisper"
+echo "      result = mlx_whisper.transcribe("
+echo "          \"audio.wav\","
+echo "          path_or_hf_repo=\"$WHISPER_ID\","
+echo "      )"
+echo "      print(result[\"text\"])"
+echo ""
+fi
+echo "  Any Mac / Intel — faster-whisper:"
+echo ""
+echo "      from faster_whisper import WhisperModel"
+echo "      model = WhisperModel(\"$WHISPER_ID\", compute_type=\"int8\")"
+echo "      segments, _ = model.transcribe(\"audio.wav\")"
+echo "      print(\" \".join(s.text for s in segments))"
+echo ""
+echo "  Models are cached in: ~/.cache/huggingface/"
+echo "  They load in seconds after the first use."
+echo ""
+
+if $OLLAMA_INSTALLED; then
+echo "  ── Ollama / qwen2.5:1.5b  (LLM) ─────────────────────────────"
+echo ""
+echo "  Terminal:"
+echo "      ollama run qwen2.5:1.5b \"Your prompt here\""
+echo ""
+echo "  Python:"
+echo "      import urllib.request, json"
+echo "      payload = json.dumps({"
+echo "          \"model\": \"qwen2.5:1.5b\","
+echo "          \"prompt\": \"Your prompt here\","
+echo "          \"stream\": False,"
+echo "      }).encode()"
+echo "      req = urllib.request.Request("
+echo "          \"http://localhost:11434/api/generate\","
+echo "          data=payload,"
+echo "          headers={\"Content-Type\": \"application/json\"},"
+echo "      )"
+echo "      with urllib.request.urlopen(req) as r:"
+echo "          print(json.loads(r.read())[\"response\"])"
+echo ""
+echo "  curl:"
+echo "      curl http://localhost:11434/api/generate \\"
+echo "        -H \"Content-Type: application/json\" \\"
+echo "        -d '{\"model\":\"qwen2.5:1.5b\",\"prompt\":\"Hello\",\"stream\":false}'"
+echo ""
+echo "  Note: Ollama must be running — start it with:  ollama serve"
+echo ""
+fi
+
+echo "  ─────────────────────────────────────────────────────────────"
+echo ""
+read -rp "  Press Enter once you have saved the above instructions… "
 echo ""

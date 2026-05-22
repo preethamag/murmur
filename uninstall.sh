@@ -7,6 +7,7 @@ set -euo pipefail
 RED='\033[0;31m'
 GRN='\033[0;32m'
 YLW='\033[1;33m'
+CYN='\033[0;36m'
 BLD='\033[1m'
 RST='\033[0m'
 
@@ -20,6 +21,82 @@ confirm() {
     local ans
     read -rp "  ${msg} [y/N]: " ans
     [[ "$ans" =~ ^[Yy]$ ]]
+}
+
+# Prompts: [r]emove / [k]eep (show usage instructions) / [s]kip
+# Returns: "remove", "keep", or "skip"
+ask_keep_or_remove() {
+    local msg="$1"
+    local ans
+    while true; do
+        read -rp "  ${msg}  [r=remove / k=keep + show usage / s=skip]: " ans
+        case "$ans" in
+            r|R) echo "remove"; return ;;
+            k|K) echo "keep";   return ;;
+            s|S|"") echo "skip"; return ;;
+            *) echo "  Please type r, k, or s." ;;
+        esac
+    done
+}
+
+show_whisper_instructions() {
+    local model_id="${1:-<your-model-id>}"
+    echo ""
+    echo -e "  ${CYN}── Whisper  (speech → text) — standalone usage ──────────────${RST}"
+    echo ""
+    echo "  Apple Silicon — mlx-whisper (fastest):"
+    echo ""
+    echo "      import mlx_whisper"
+    echo "      result = mlx_whisper.transcribe("
+    echo "          \"audio.wav\","
+    echo "          path_or_hf_repo=\"$model_id\","
+    echo "      )"
+    echo "      print(result[\"text\"])"
+    echo ""
+    echo "  Any Mac / Intel — faster-whisper:"
+    echo ""
+    echo "      from faster_whisper import WhisperModel"
+    echo "      model = WhisperModel(\"$model_id\", compute_type=\"int8\")"
+    echo "      segments, _ = model.transcribe(\"audio.wav\")"
+    echo "      print(\" \".join(s.text for s in segments))"
+    echo ""
+    echo "  Models are cached in: ~/.cache/huggingface/"
+    echo ""
+    read -rp "  Press Enter to continue… "
+    echo ""
+}
+
+show_ollama_instructions() {
+    echo ""
+    echo -e "  ${CYN}── Ollama / qwen2.5:1.5b  (LLM) — standalone usage ─────────${RST}"
+    echo ""
+    echo "  Terminal:"
+    echo "      ollama run qwen2.5:1.5b \"Your prompt here\""
+    echo ""
+    echo "  Python:"
+    echo "      import urllib.request, json"
+    echo "      payload = json.dumps({"
+    echo "          \"model\": \"qwen2.5:1.5b\","
+    echo "          \"prompt\": \"Your prompt here\","
+    echo "          \"stream\": False,"
+    echo "      }).encode()"
+    echo "      req = urllib.request.Request("
+    echo "          \"http://localhost:11434/api/generate\","
+    echo "          data=payload,"
+    echo "          headers={\"Content-Type\": \"application/json\"},"
+    echo "      )"
+    echo "      with urllib.request.urlopen(req) as r:"
+    echo "          print(json.loads(r.read())[\"response\"])"
+    echo ""
+    echo "  curl:"
+    echo "      curl http://localhost:11434/api/generate \\"
+    echo "        -H \"Content-Type: application/json\" \\"
+    echo "        -d '{\"model\":\"qwen2.5:1.5b\",\"prompt\":\"Hello\",\"stream\":false}'"
+    echo ""
+    echo "  Note: start Ollama first with:  ollama serve"
+    echo ""
+    read -rp "  Press Enter to continue… "
+    echo ""
 }
 
 removed=0
@@ -155,31 +232,41 @@ remove_path "$HOME/.murmur" "Config & vocabulary  (~/.murmur)"
 # ── 7. Whisper model cache ────────────────────────────────────────────────────
 HF_CACHE="$HOME/.cache/huggingface"
 if [ -d "$HF_CACHE" ]; then
-    # Find only Murmur-related model dirs (mlx-community/whisper-* and openai/whisper-*)
     WHISPER_DIRS=()
     while IFS= read -r d; do
         WHISPER_DIRS+=("$d")
-    done < <(find "$HF_CACHE" -maxdepth 3 \( \
+    done < <(find "$HF_CACHE" -maxdepth 4 \( \
         -path "*/mlx-community/whisper*" \
         -o -path "*/openai/whisper*" \
         -o -path "*/models--Systran*" \
-    \) -type d -maxdepth 4 2>/dev/null | sort -u)
+    \) -type d 2>/dev/null | sort -u)
 
     if [ ${#WHISPER_DIRS[@]} -gt 0 ]; then
         TOTAL=$(du -sh "$HF_CACHE" 2>/dev/null | awk '{print $1}' || echo "?")
         echo -e "  ${YLW}Found${RST}  Whisper model cache (~$TOTAL on disk)"
         echo "         $HF_CACHE"
-        if confirm "Delete cached Whisper models? (frees disk space, re-downloads on next use)"; then
-            for d in "${WHISPER_DIRS[@]}"; do
-                rm -rf "$d"
-            done
-            # Also clean faster-whisper cache
-            rm -rf "$HOME/.cache/whisper" 2>/dev/null || true
-            echo -e "  ${GRN}✓ Removed${RST}"
-            removed=$((removed + 1))
-        else
-            skipped=$((skipped + 1))
-        fi
+        echo -e "  ${BLD}These models work in any Python app — not just Murmur.${RST}"
+        echo ""
+
+        WHISPER_CHOICE=$(ask_keep_or_remove "What would you like to do with the Whisper models?")
+        case "$WHISPER_CHOICE" in
+            remove)
+                for d in "${WHISPER_DIRS[@]}"; do rm -rf "$d"; done
+                rm -rf "$HOME/.cache/whisper" 2>/dev/null || true
+                echo -e "  ${GRN}✓ Removed${RST}"
+                removed=$((removed + 1))
+                ;;
+            keep)
+                # Grab first found model id for the instructions
+                SAMPLE_ID=$(basename "$(dirname "${WHISPER_DIRS[0]}")")/$(basename "${WHISPER_DIRS[0]}")
+                show_whisper_instructions "$SAMPLE_ID"
+                echo -e "  ${GRN}✓ Kept${RST} — models remain in ~/.cache/huggingface/"
+                skipped=$((skipped + 1))
+                ;;
+            skip)
+                skipped=$((skipped + 1))
+                ;;
+        esac
         echo ""
     fi
 fi
@@ -188,13 +275,25 @@ fi
 if command -v ollama &>/dev/null; then
     if ollama list 2>/dev/null | grep -q "qwen2.5:1.5b"; then
         echo -e "  ${YLW}Found${RST}  Ollama model  qwen2.5:1.5b"
-        if confirm "Remove qwen2.5:1.5b from Ollama? (Ollama itself stays)"; then
-            ollama rm qwen2.5:1.5b
-            echo -e "  ${GRN}✓ Removed${RST}"
-            removed=$((removed + 1))
-        else
-            skipped=$((skipped + 1))
-        fi
+        echo -e "  ${BLD}This model works with any app via the Ollama REST API.${RST}"
+        echo ""
+
+        OLLAMA_CHOICE=$(ask_keep_or_remove "What would you like to do with qwen2.5:1.5b?")
+        case "$OLLAMA_CHOICE" in
+            remove)
+                ollama rm qwen2.5:1.5b
+                echo -e "  ${GRN}✓ Removed${RST}"
+                removed=$((removed + 1))
+                ;;
+            keep)
+                show_ollama_instructions
+                echo -e "  ${GRN}✓ Kept${RST} — model remains available via Ollama"
+                skipped=$((skipped + 1))
+                ;;
+            skip)
+                skipped=$((skipped + 1))
+                ;;
+        esac
         echo ""
     fi
 fi
