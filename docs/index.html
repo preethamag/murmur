@@ -330,9 +330,11 @@
   <div class="nav-section">Reference</div>
   <a href="#features">Features</a>
   <a href="#guide">User guide</a>
+  <a href="#models">Using models elsewhere</a>
 
   <div class="nav-section">Help</div>
   <a href="#faq">FAQs</a>
+  <a href="#uninstall">Uninstall</a>
 </nav>
 
 <!-- ── Main ───────────────────────────────────────────────────────────────── -->
@@ -352,21 +354,21 @@
     <p>Murmur requires <strong>Python 3.10+</strong>. The installer handles everything else — dependencies, model download, and optional AI cleanup.</p>
 
     <div class="callout">
-      <strong>Recommended:</strong> Use the one-line installer. It walks you through model selection and sets up your config automatically.
+      <strong>Recommended:</strong> Use the one-line installer below. It clones the repo to <code>~/Applications/Murmur</code>, walks you through model selection, and sets everything up automatically — no manual steps needed.
     </div>
 
-    <h3 style="margin-bottom:10px;">macOS</h3>
-    <pre><code><span class="comment"># Clone the repo</span>
-git clone https://github.com/preethamag/murmur.git
-cd murmur
-
-<span class="comment"># Run the installer (handles everything)</span>
-./install.sh</code></pre>
+    <h3 style="margin-bottom:10px;">macOS — one-liner</h3>
+    <pre><code>curl -fsSL https://raw.githubusercontent.com/preethamag/murmur/main/install.sh | bash</code></pre>
 
     <h3 style="margin-bottom:10px;margin-top:20px;">Windows</h3>
     <pre><code>git clone https://github.com/preethamag/murmur.git
 cd murmur
 install.bat</code></pre>
+
+    <h3 style="margin-bottom:10px;margin-top:20px;">macOS — manual (if you prefer to clone first)</h3>
+    <pre><code>git clone https://github.com/preethamag/murmur.git ~/Applications/Murmur
+cd ~/Applications/Murmur
+./install.sh</code></pre>
 
     <h3 style="margin-bottom:12px;margin-top:28px;">What gets installed</h3>
     <div class="install-grid">
@@ -711,8 +713,156 @@ python3 -m murmur</code></pre>
 
     <div class="faq-item">
       <div class="faq-q">How do I uninstall Murmur?</div>
-      <p class="faq-a">Quit Murmur from the menu bar, then: <code>pip uninstall murmur</code>. Remove config with <code>rm -rf ~/.murmur</code>. Disable login item first in Settings if you had it enabled. Cached Whisper models live in <code>~/.cache/huggingface/</code> — delete that folder to free disk space.</p>
+      <p class="faq-a">Use the one-line uninstaller — see the <a href="#uninstall" style="color:var(--accent)">Uninstall</a> section below. It finds every trace of Murmur on your machine and removes them one by one with your confirmation. Whisper and Ollama models can be kept for use in other apps.</p>
     </div>
+  </section>
+
+  <!-- ── Using models outside Murmur ── -->
+  <section id="models">
+    <h2>Using Whisper &amp; Ollama outside Murmur</h2>
+
+    <p>Murmur installs two AI models that are fully reusable in any other project on your machine — they are not locked to Murmur. The models live in standard cache locations and can be called directly from Python, the terminal, or any HTTP client.</p>
+
+    <div class="callout">
+      <strong>Nothing extra to download.</strong> If you've run Murmur at least once, the models are already cached and load instantly in any other app.
+    </div>
+
+    <h3 style="margin-bottom:12px;margin-top:28px;">Whisper — speech to text</h3>
+    <p>Whisper models are cached in <code>~/.cache/huggingface/</code>. Three Python libraries can load them; use whichever matches your hardware.</p>
+
+    <h3 style="font-size:13px;color:var(--muted);font-weight:500;margin-bottom:8px;margin-top:20px;">Apple Silicon — mlx-whisper (fastest)</h3>
+    <pre><code>import mlx_whisper
+
+result = mlx_whisper.transcribe(
+    "audio.wav",
+    path_or_hf_repo="mlx-community/whisper-large-v3-turbo-mlx",
+)
+print(result["text"])</code></pre>
+
+    <p style="font-size:13px;color:var(--muted);">Replace <code>whisper-large-v3-turbo-mlx</code> with the model you chose during install: <code>whisper-tiny-mlx</code>, <code>whisper-base-mlx</code>, <code>whisper-small-mlx</code>, <code>whisper-medium-mlx</code>, or <code>whisper-large-v3-mlx</code>.</p>
+
+    <h3 style="font-size:13px;color:var(--muted);font-weight:500;margin-bottom:8px;margin-top:20px;">Intel Mac / Windows — faster-whisper</h3>
+    <pre><code>from faster_whisper import WhisperModel
+
+model = WhisperModel("large-v3-turbo", compute_type="int8")
+segments, info = model.transcribe("audio.wav", language="en")
+print(" ".join(s.text for s in segments))</code></pre>
+
+    <p style="font-size:13px;color:var(--muted);">Replace <code>large-v3-turbo</code> with: <code>tiny</code>, <code>base</code>, <code>small</code>, <code>medium</code>, or <code>large-v3</code>. Drop <code>language</code> for auto-detect.</p>
+
+    <h3 style="font-size:13px;color:var(--muted);font-weight:500;margin-bottom:8px;margin-top:20px;">Any platform — openai-whisper (pure Python fallback)</h3>
+    <pre><code>import whisper
+
+model = whisper.load_model("turbo")  <span class="comment"># loads once, stays in memory</span>
+result = model.transcribe("audio.wav")
+print(result["text"])</code></pre>
+
+    <table style="margin-top:20px;">
+      <thead><tr><th>Library</th><th>Best for</th><th>Install</th></tr></thead>
+      <tbody>
+        <tr><td>mlx-whisper</td><td>Apple Silicon — uses the Neural Engine</td><td><code>pip install mlx-whisper</code></td></tr>
+        <tr><td>faster-whisper</td><td>Intel Mac, Windows, Linux</td><td><code>pip install faster-whisper</code></td></tr>
+        <tr><td>openai-whisper</td><td>Universal fallback</td><td><code>pip install openai-whisper</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-bottom:12px;margin-top:40px;">Ollama + qwen2.5:1.5b — local LLM</h3>
+    <p>Ollama runs as a local server at <code>http://localhost:11434</code>. Any app that can make an HTTP request can use it. Start Ollama first if it isn't already running:</p>
+    <pre><code>ollama serve   <span class="comment"># runs in background; skip if Ollama.app is already open</span></code></pre>
+
+    <h3 style="font-size:13px;color:var(--muted);font-weight:500;margin-bottom:8px;margin-top:20px;">Terminal</h3>
+    <pre><code>ollama run qwen2.5:1.5b "Summarise this in one sentence: ..."</code></pre>
+
+    <h3 style="font-size:13px;color:var(--muted);font-weight:500;margin-bottom:8px;margin-top:20px;">Python</h3>
+    <pre><code>import urllib.request, json
+
+def ask(prompt: str) -> str:
+    payload = json.dumps({
+        "model": "qwen2.5:1.5b",
+        "prompt": prompt,
+        "stream": False,
+    }).encode()
+    req = urllib.request.Request(
+        "http://localhost:11434/api/generate",
+        data=payload,
+        headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return json.loads(r.read())["response"].strip()
+
+print(ask("What is the capital of France?"))</code></pre>
+
+    <h3 style="font-size:13px;color:var(--muted);font-weight:500;margin-bottom:8px;margin-top:20px;">curl</h3>
+    <pre><code>curl http://localhost:11434/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{"model":"qwen2.5:1.5b","prompt":"Hello!","stream":false}'</code></pre>
+
+    <h3 style="font-size:13px;color:var(--muted);font-weight:500;margin-bottom:8px;margin-top:20px;">OpenAI-compatible endpoint (for apps that use the OpenAI SDK)</h3>
+    <pre><code><span class="comment"># pip install openai</span>
+from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
+response = client.chat.completions.create(
+    model="qwen2.5:1.5b",
+    messages=[{"role": "user", "content": "Hello!"}],
+)
+print(response.choices[0].message.content)</code></pre>
+
+    <div class="callout" style="margin-top:24px;">
+      <strong>Other models:</strong> You can pull any model Ollama supports — <code>ollama pull llama3.2</code>, <code>ollama pull mistral</code>, etc. — and call them the same way. Run <code>ollama list</code> to see what's installed.
+    </div>
+  </section>
+
+  <!-- ── Uninstall ── -->
+  <section id="uninstall">
+    <h2>Uninstall</h2>
+
+    <p>The uninstaller finds every trace of Murmur on your machine — running process, login item, pip package, code directory, config, and cached models — and removes them one by one with your confirmation. Whisper and Ollama models can be kept for use in other apps.</p>
+
+    <h3 style="margin-bottom:10px;">One-liner</h3>
+    <pre><code>curl -fsSL https://raw.githubusercontent.com/preethamag/murmur/main/uninstall.sh | bash</code></pre>
+
+    <h3 style="margin-bottom:12px;margin-top:28px;">What it removes</h3>
+    <table>
+      <thead><tr><th>Item</th><th>Location</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Running process</td><td>—</td><td>Kills Murmur if currently open</td></tr>
+        <tr><td>Login item</td><td><code>~/Library/LaunchAgents/com.murmur.app.plist</code></td><td>Unloaded from launchctl before deletion</td></tr>
+        <tr><td>pip package</td><td>pip install location</td><td><code>pip3 uninstall murmur</code></td></tr>
+        <tr><td><code>murmur</code> command</td><td>Wherever it is in PATH</td><td>Removes the binary</td></tr>
+        <tr><td>Code directory</td><td>Searches 10+ common locations</td><td>Detects any clone of the repo</td></tr>
+        <tr><td>Config &amp; data</td><td><code>~/.murmur/</code></td><td>Includes vocabulary and last transcription</td></tr>
+        <tr><td>Whisper models</td><td><code>~/.cache/huggingface/</code></td><td>Optional — can keep for other apps</td></tr>
+        <tr><td>qwen2.5:1.5b</td><td>Ollama model store</td><td>Optional — can keep for other apps</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn" style="margin-top:8px;">
+      <strong>Keeping models:</strong> When the uninstaller reaches the Whisper or Ollama model steps, choose <strong>k</strong> (keep) instead of <strong>r</strong> (remove). It will print the full standalone usage instructions before moving on so you know how to use them in other projects.
+    </div>
+
+    <h3 style="margin-bottom:10px;margin-top:28px;">Manual uninstall (if you prefer)</h3>
+    <pre><code><span class="comment"># 1. Quit Murmur from the menu bar first, then:</span>
+
+<span class="comment"># Remove login item</span>
+launchctl bootout gui/$(id -u)/com.murmur.app 2>/dev/null
+rm -f ~/Library/LaunchAgents/com.murmur.app.plist
+
+<span class="comment"># Uninstall pip package</span>
+pip3 uninstall murmur -y
+
+<span class="comment"># Remove config &amp; data</span>
+rm -rf ~/.murmur
+
+<span class="comment"># Remove code directory (adjust path if different)</span>
+rm -rf ~/Applications/Murmur
+
+<span class="comment"># Optional: remove cached Whisper models</span>
+rm -rf ~/.cache/huggingface/hub/models--mlx-community
+rm -rf ~/.cache/huggingface/hub/models--Systran
+
+<span class="comment"># Optional: remove Ollama model</span>
+ollama rm qwen2.5:1.5b</code></pre>
   </section>
 
 </main>
