@@ -42,8 +42,18 @@ fi
 echo "  ✓ Python $($PYTHON --version | awk '{print $2}')"
 echo ""
 
-# Use the located Python for all subsequent pip calls
-PIP="$PYTHON -m pip"
+# ── tkinter check (required for UI windows; separate package on Homebrew) ─────
+if ! "$PYTHON" -c "import tkinter" 2>/dev/null; then
+  PY_VER=$("$PYTHON" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+  echo "  tkinter not found — installing python-tk@${PY_VER}…"
+  if command -v brew &>/dev/null; then
+    brew install "python-tk@${PY_VER}"
+  else
+    echo "  ✗  tkinter is required but not installed."
+    echo "     Install it with:  brew install python-tk@${PY_VER}"
+    exit 1
+  fi
+fi
 
 # ── Install location ──────────────────────────────────────────────────────────
 INSTALL_DIR="$HOME/Applications/Murmur"
@@ -65,6 +75,16 @@ else
   echo "  Installing from: $INSTALL_DIR"
   echo ""
 fi
+
+# ── Virtual environment ────────────────────────────────────────────────────────
+VENV_DIR="$INSTALL_DIR/.venv"
+if [ ! -d "$VENV_DIR" ]; then
+  echo "  Creating virtual environment…"
+  "$PYTHON" -m venv "$VENV_DIR"
+  echo ""
+fi
+PYTHON="$VENV_DIR/bin/python"
+PIP="$VENV_DIR/bin/pip"
 
 # ── Model selection ───────────────────────────────────────────────────────────
 echo "  Choose a Whisper model to download:"
@@ -252,14 +272,12 @@ echo "  Config file:    ~/.murmur/config.yaml"
 echo ""
 
 # ── PATH check ────────────────────────────────────────────────────────────────
-MURMUR_BIN=$($PYTHON -c "import sysconfig; print(sysconfig.get_path('scripts'))")/murmur
 if ! command -v murmur &>/dev/null; then
-  SCRIPTS_DIR=$($PYTHON -c "import sysconfig; print(sysconfig.get_path('scripts'))")
   echo "  ⚠  The 'murmur' command is not on your PATH yet."
   echo ""
   echo "     Add this line to your ~/.zshrc (or ~/.bash_profile):"
   echo ""
-  echo "         export PATH=\"$SCRIPTS_DIR:\$PATH\""
+  echo "         export PATH=\"$VENV_DIR/bin:\$PATH\""
   echo ""
   echo "     Then restart your terminal, or run:"
   echo "         source ~/.zshrc"
