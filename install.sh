@@ -78,8 +78,13 @@ fi
 
 # ── Virtual environment ────────────────────────────────────────────────────────
 VENV_DIR="$INSTALL_DIR/.venv"
-if [ ! -d "$VENV_DIR" ]; then
+VENV_NEEDS_CREATE=true
+if [ -d "$VENV_DIR" ] && "$VENV_DIR/bin/python" -c "import setuptools, pip" 2>/dev/null; then
+  VENV_NEEDS_CREATE=false
+fi
+if $VENV_NEEDS_CREATE; then
   echo "  Creating virtual environment…"
+  rm -rf "$VENV_DIR"
   "$PYTHON" -m venv "$VENV_DIR"
   echo ""
 fi
