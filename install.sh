@@ -122,7 +122,7 @@ echo ""
 
 # ── Install dependencies ───────────────────────────────────────────────────────
 echo "  Upgrading pip…"
-$PIP install --upgrade pip -q
+$PIP install --upgrade pip setuptools wheel -q
 
 echo "  Installing dependencies…"
 $PIP install -r requirements-mac.txt -q
