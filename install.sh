@@ -38,10 +38,38 @@ else
 fi
 
 # ── Python check ──────────────────────────────────────────────────────────────
-if ! command -v python3 &>/dev/null; then
-  echo "Error: Python 3.10+ required. Install from https://python.org"
+# Find a Python 3.10+ binary — prefer Homebrew-managed ones over the system stub.
+PYTHON=""
+for candidate in python3.13 python3.12 python3.11 python3.10 python3; do
+  if command -v "$candidate" &>/dev/null; then
+    ver=$("$candidate" -c "import sys; print(sys.version_info[:2])" 2>/dev/null)
+    if "$candidate" -c "import sys; sys.exit(0 if sys.version_info >= (3,10) else 1)" 2>/dev/null; then
+      PYTHON="$candidate"
+      break
+    fi
+  fi
+done
+
+if [ -z "$PYTHON" ]; then
+  echo ""
+  echo "  ✗  Python 3.10 or newer is required."
+  echo ""
+  echo "     Your system Python is too old ($(python3 --version 2>&1 | head -1))."
+  echo ""
+  echo "     Install a newer Python via Homebrew (recommended):"
+  echo "         brew install python@3.13"
+  echo ""
+  echo "     Or download from: https://www.python.org/downloads/"
+  echo ""
+  echo "     After installing, run this installer again."
   exit 1
 fi
+
+echo "  ✓ Using $($PYTHON --version)"
+echo ""
+
+# Use the located Python for all subsequent pip calls
+PIP="$PYTHON -m pip"
 
 # ── Model selection ───────────────────────────────────────────────────────────
 echo "  Choose a Whisper model to download:"
@@ -61,7 +89,7 @@ echo "  Tip: 'turbo' gives the best bang for the buck — highly recommended."
 echo "  Models are stored in ~/.cache/huggingface/ after download."
 echo ""
 
-read -rp "  Enter number [default: 4 (turbo)]: " choice
+read -rp "  Enter number [default: 4 (turbo)]: " choice </dev/tty
 echo ""
 
 case "$choice" in
@@ -78,9 +106,13 @@ echo "  → Selected: $MODEL"
 echo ""
 
 # ── Install dependencies ───────────────────────────────────────────────────────
-echo "  Installing dependencies..."
-pip3 install -r requirements-mac.txt -q
-pip3 install -e . -q
+echo "  Upgrading pip…"
+$PIP install --upgrade pip -q
+
+echo "  Installing dependencies…"
+$PIP install -r requirements-mac.txt -q
+# Use non-editable install so it works with any pip version
+$PIP install . -q
 
 # ── Ollama (AI Cleanup + Vocabulary) ──────────────────────────────────────────
 echo "  Checking for Ollama (used for AI cleanup and vocabulary corrections)..."
@@ -94,7 +126,7 @@ else
   echo "  Ollama is not installed."
   echo "  AI Cleanup (#1) and Context Vocabulary (#3) require Ollama + qwen2.5:1.5b (~1 GB)."
   echo ""
-  read -rp "  Install Ollama now? [Y/n]: " install_ollama
+  read -rp "  Install Ollama now? [Y/n]: " install_ollama </dev/tty
   if [[ "$install_ollama" =~ ^[Nn]$ ]]; then
     echo "  Skipping Ollama. You can install it later from https://ollama.com"
     echo "  and run: ollama pull qwen2.5:1.5b"
@@ -143,7 +175,7 @@ EOF
 echo "  Downloading $MODEL model (this happens once)..."
 echo ""
 
-ARCH=$(python3 -c "import platform; print(platform.machine())")
+ARCH=$($PYTHON -c "import platform; print(platform.machine())")
 
 if [ "$ARCH" = "arm64" ]; then
   # Apple Silicon — use mlx-whisper
@@ -152,7 +184,7 @@ if [ "$ARCH" = "arm64" ]; then
   else
     MLX_ID="mlx-community/whisper-${MODEL}-mlx"
   fi
-  python3 - <<PYEOF
+  $PYTHON - <<PYEOF
 import mlx_whisper, tempfile, wave, struct
 # Download by running a silent transcription on a blank audio file
 import numpy as np, os, struct, wave, tempfile
@@ -175,7 +207,7 @@ else
   else
     FW_MODEL="$MODEL"
   fi
-  python3 - <<PYEOF
+  $PYTHON - <<PYEOF
 from faster_whisper import WhisperModel
 print("  Downloading via faster-whisper...")
 WhisperModel("$FW_MODEL", compute_type="int8")
@@ -183,7 +215,7 @@ print("  Model ready.")
 PYEOF
 fi
 
-PYTHON_BIN=$(basename "$(command -v python3)")
+PYTHON_BIN=$(basename "$($PYTHON -c "import sys; print(sys.executable)")")
 
 # Determine which Whisper ID was actually downloaded
 if [ "$ARCH" = "arm64" ]; then
@@ -223,6 +255,24 @@ echo "  ────────────────────────
 echo "  Default hotkey: hold Right Option (⌥) while speaking"
 echo "  Config file:    ~/.murmur/config.yaml"
 echo ""
+
+# ── PATH check ────────────────────────────────────────────────────────────────
+MURMUR_BIN=$($PYTHON -c "import sysconfig; print(sysconfig.get_path('scripts'))")/murmur
+if ! command -v murmur &>/dev/null; then
+  SCRIPTS_DIR=$($PYTHON -c "import sysconfig; print(sysconfig.get_path('scripts'))")
+  echo "  ⚠  The 'murmur' command is not on your PATH yet."
+  echo ""
+  echo "     Add this line to your ~/.zshrc (or ~/.bash_profile):"
+  echo ""
+  echo "         export PATH=\"$SCRIPTS_DIR:\$PATH\""
+  echo ""
+  echo "     Then restart your terminal, or run:"
+  echo "         source ~/.zshrc"
+  echo ""
+  echo "     Alternatively, run Murmur directly with:"
+  echo "         $PYTHON -m murmur"
+  echo ""
+fi
 
 # ── Standalone model usage instructions ───────────────────────────────────────
 echo ""
@@ -287,5 +337,5 @@ fi
 
 echo "  ─────────────────────────────────────────────────────────────"
 echo ""
-read -rp "  Press Enter once you have saved the above instructions… "
+read -rp "  Press Enter once you have saved the above instructions… " </dev/tty
 echo ""
