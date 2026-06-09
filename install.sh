@@ -12,10 +12,40 @@ echo ""
 echo "  Open-source voice dictation — powered by local Whisper"
 echo ""
 
+# ── Python check (must pass before anything else runs) ────────────────────────
+PYTHON=""
+for candidate in python3.13 python3.12 python3.11 python3.10 python3; do
+  if command -v "$candidate" &>/dev/null; then
+    if "$candidate" -c "import sys; sys.exit(0 if sys.version_info >= (3,10) else 1)" 2>/dev/null; then
+      PYTHON="$candidate"
+      break
+    fi
+  fi
+done
+
+if [ -z "$PYTHON" ]; then
+  FOUND_VER=$(python3 --version 2>&1 || echo "Python not found")
+  echo "  ✗  Python 3.10 or newer is required."
+  echo "     Found: $FOUND_VER"
+  echo ""
+  echo "  Install Python 3.13 and re-run this installer:"
+  echo ""
+  echo "     Option A — Homebrew (recommended):"
+  echo "         brew install python@3.13"
+  echo ""
+  echo "     Option B — Download from python.org:"
+  echo "         https://www.python.org/downloads/"
+  echo ""
+  exit 1
+fi
+
+echo "  ✓ Python $($PYTHON --version | awk '{print $2}')"
+echo ""
+
+# Use the located Python for all subsequent pip calls
+PIP="$PYTHON -m pip"
+
 # ── Install location ──────────────────────────────────────────────────────────
-# If the script is being run from inside the repo already, stay here.
-# Otherwise clone the repo to ~/Applications/Murmur so the app always
-# lives in a predictable, permanent location.
 INSTALL_DIR="$HOME/Applications/Murmur"
 
 if [ ! -f "$(dirname "$0")/pyproject.toml" ]; then
@@ -30,46 +60,11 @@ if [ ! -f "$(dirname "$0")/pyproject.toml" ]; then
   fi
   cd "$INSTALL_DIR"
 else
-  # Running from inside the repo (developer / manual clone)
   cd "$(dirname "$0")"
   INSTALL_DIR="$(pwd)"
   echo "  Installing from: $INSTALL_DIR"
   echo ""
 fi
-
-# ── Python check ──────────────────────────────────────────────────────────────
-# Find a Python 3.10+ binary — prefer Homebrew-managed ones over the system stub.
-PYTHON=""
-for candidate in python3.13 python3.12 python3.11 python3.10 python3; do
-  if command -v "$candidate" &>/dev/null; then
-    ver=$("$candidate" -c "import sys; print(sys.version_info[:2])" 2>/dev/null)
-    if "$candidate" -c "import sys; sys.exit(0 if sys.version_info >= (3,10) else 1)" 2>/dev/null; then
-      PYTHON="$candidate"
-      break
-    fi
-  fi
-done
-
-if [ -z "$PYTHON" ]; then
-  echo ""
-  echo "  ✗  Python 3.10 or newer is required."
-  echo ""
-  echo "     Your system Python is too old ($(python3 --version 2>&1 | head -1))."
-  echo ""
-  echo "     Install a newer Python via Homebrew (recommended):"
-  echo "         brew install python@3.13"
-  echo ""
-  echo "     Or download from: https://www.python.org/downloads/"
-  echo ""
-  echo "     After installing, run this installer again."
-  exit 1
-fi
-
-echo "  ✓ Using $($PYTHON --version)"
-echo ""
-
-# Use the located Python for all subsequent pip calls
-PIP="$PYTHON -m pip"
 
 # ── Model selection ───────────────────────────────────────────────────────────
 echo "  Choose a Whisper model to download:"
