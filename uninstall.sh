@@ -2,7 +2,7 @@
 # Murmur — full uninstaller
 # Finds every trace of Murmur on this machine and removes it.
 
-set -euo pipefail
+set -eo pipefail
 
 RED='\033[0;31m'
 GRN='\033[0;32m'
@@ -19,7 +19,7 @@ echo ""
 confirm() {
     local msg="$1"
     local ans
-    read -rp "  ${msg} [y/N]: " ans
+    read -rp "  ${msg} [y/N]: " ans </dev/tty
     [[ "$ans" =~ ^[Yy]$ ]]
 }
 
@@ -29,7 +29,7 @@ ask_keep_or_remove() {
     local msg="$1"
     local ans
     while true; do
-        read -rp "  ${msg}  [r=remove / k=keep + show usage / s=skip]: " ans
+        read -rp "  ${msg}  [r=remove / k=keep + show usage / s=skip]: " ans </dev/tty
         case "$ans" in
             r|R) echo "remove"; return ;;
             k|K) echo "keep";   return ;;
@@ -62,7 +62,7 @@ show_whisper_instructions() {
     echo ""
     echo "  Models are cached in: ~/.cache/huggingface/"
     echo ""
-    read -rp "  Press Enter to continue… "
+    read -rp "  Press Enter to continue… " </dev/tty
     echo ""
 }
 
@@ -95,7 +95,7 @@ show_ollama_instructions() {
     echo ""
     echo "  Note: start Ollama first with:  ollama serve"
     echo ""
-    read -rp "  Press Enter to continue… "
+    read -rp "  Press Enter to continue… " </dev/tty
     echo ""
 }
 
@@ -195,10 +195,13 @@ CANDIDATES=(
     "$HOME/dev/murmur"
 )
 
-# Also check wherever the script itself lives (if run from the repo)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ -f "$SCRIPT_DIR/pyproject.toml" ] && grep -q 'name = "murmur"' "$SCRIPT_DIR/pyproject.toml" 2>/dev/null; then
-    CANDIDATES+=("$SCRIPT_DIR")
+# Also check wherever the script itself lives (if run from the repo, not stdin)
+SCRIPT_SOURCE="${BASH_SOURCE[0]:-}"
+if [ -n "$SCRIPT_SOURCE" ] && [ "$SCRIPT_SOURCE" != "bash" ] && [ "$SCRIPT_SOURCE" != "-" ]; then
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" && pwd)"
+    if [ -f "$SCRIPT_DIR/pyproject.toml" ] && grep -q 'name = "murmur"' "$SCRIPT_DIR/pyproject.toml" 2>/dev/null; then
+        CANDIDATES+=("$SCRIPT_DIR")
+    fi
 fi
 
 # Search one level deep in common parent dirs for any murmur clone
@@ -210,13 +213,15 @@ for PARENT in "$HOME" "$HOME/Applications" "$HOME/Projects" "$HOME/code" "$HOME/
     fi
 done
 
-# Deduplicate and check each
-declare -A SEEN
+# Deduplicate using a temp file (bash 3.2 compatible — no associative arrays)
+SEEN_FILE=$(mktemp)
+trap 'rm -f "$SEEN_FILE"' EXIT
+
 for DIR in "${CANDIDATES[@]}"; do
-    # Resolve symlinks / normalise path
     REAL=$(python3 -c "import os; print(os.path.realpath('$DIR'))" 2>/dev/null || echo "$DIR")
-    if [ -n "${SEEN[$REAL]:-}" ]; then continue; fi
-    SEEN[$REAL]=1
+    # Skip if already processed
+    if grep -qxF "$REAL" "$SEEN_FILE" 2>/dev/null; then continue; fi
+    echo "$REAL" >> "$SEEN_FILE"
 
     if [ -d "$REAL" ] && [ -f "$REAL/pyproject.toml" ] && grep -q 'name = "murmur"' "$REAL/pyproject.toml" 2>/dev/null; then
         echo ""
