@@ -160,7 +160,7 @@ def _show_onboarding():
 
     # ── button (Frame+Label to force bg color on macOS) ───────────────────────
     btn_frame = tk.Frame(root, bg=BTN_BG, cursor="hand2")
-    btn_frame.pack(fill="x", padx=PAD, pady=(14, 0))
+    btn_frame.pack(fill="x", padx=PAD, pady=(12, 0))
     btn_label = tk.Label(btn_frame, text="Open Accessibility Settings  →",
                          bg=BTN_BG, fg="white",
                          font=("Helvetica Neue", 12, "bold"),
@@ -177,7 +177,7 @@ def _show_onboarding():
     status_var = tk.StringVar(value="Waiting for permission…")
     status_lbl = tk.Label(root, textvariable=status_var,
                           bg=BG, fg=SUBTLE, font=("Helvetica Neue", 10))
-    status_lbl.pack(pady=(10, 20))
+    status_lbl.pack(pady=(10, 28))
 
     def _poll():
         if _has_access():
