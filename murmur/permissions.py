@@ -75,7 +75,7 @@ def _show_onboarding():
     root.configure(bg=BG)
     root.attributes("-topmost", True)
 
-    W, H = 460, 560
+    W, H = 460, 600
     sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
     root.geometry(f"{W}x{H}+{(sw-W)//2}+{(sh-H)//2}")
 
@@ -84,7 +84,7 @@ def _show_onboarding():
     # ── badge ─────────────────────────────────────────────────────────────────
     badge_frame = tk.Frame(root, bg=BADGE_BG,
                            highlightthickness=1, highlightbackground=BORDER)
-    badge_frame.pack(anchor="w", padx=PAD, pady=(20, 0))
+    badge_frame.pack(anchor="w", padx=PAD, pady=(14, 0))
     tk.Label(badge_frame, text="One-time setup", bg=BADGE_BG, fg=BADGE_FG,
              font=("Helvetica Neue", 11, "bold"), padx=10, pady=4).pack()
 
@@ -96,7 +96,7 @@ def _show_onboarding():
     tk.Label(root,
              text="Required so Murmur can type into other apps.\nTakes about 30 seconds.",
              bg=BG, fg=MUTED, font=("Helvetica Neue", 13),
-             anchor="w", justify="left").pack(fill="x", padx=PAD, pady=(5, 16))
+             anchor="w", justify="left").pack(fill="x", padx=PAD, pady=(4, 12))
 
     # ── separator ─────────────────────────────────────────────────────────────
     tk.Frame(root, bg=BORDER, height=1).pack(fill="x", padx=PAD)
@@ -115,7 +115,7 @@ def _show_onboarding():
 
     circles = []
     outer = tk.Frame(root, bg=BG)
-    outer.pack(fill="x", padx=PAD, pady=(14, 0))
+    outer.pack(fill="x", padx=PAD, pady=(10, 0))
 
     for i, (title, desc) in enumerate(steps):
         is_last = i == len(steps) - 1
@@ -137,7 +137,7 @@ def _show_onboarding():
         # right: step text
         right = tk.Frame(row, bg=BG)
         right.pack(side="left", fill="x", expand=True,
-                   padx=(10, 0), pady=(2, 16 if not is_last else 0))
+                   padx=(10, 0), pady=(2, 12 if not is_last else 0))
 
         tk.Label(right, text=title, bg=BG, fg=TEXT,
                  font=("Helvetica Neue", 13, "bold"),
