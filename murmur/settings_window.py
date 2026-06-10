@@ -13,8 +13,8 @@ from .recorder import list_input_devices
 # ── option maps ───────────────────────────────────────────────────────────────
 
 INPUT_MODES = [
-    ("Hold to talk  — hold hotkey while speaking, release to transcribe", "hold"),
-    ("Tap to talk   — tap once to start, silence auto-stops (Mode B)",   "tap"),
+    ("Hold to talk  — hold hotkey, release to transcribe", "hold"),
+    ("Tap to talk   — tap to start, silence auto-stops",   "tap"),
 ]
 
 HOTKEYS = [
@@ -69,7 +69,7 @@ def _value_for(options, label):
 # ── window ────────────────────────────────────────────────────────────────────
 
 class SettingsWindow:
-    W, H = 480, 460
+    W, H = 620, 460
 
     def __init__(self):
         self.cfg = config.load()
@@ -98,7 +98,7 @@ class SettingsWindow:
         labels = [lbl for lbl, _ in options]
         var = tk.StringVar(value=_label_for(options, current_val))
         cb = ttk.Combobox(parent, textvariable=var, values=labels,
-                          state="readonly", width=42)
+                          state="readonly", width=52)
         cb.grid(row=row, column=1, sticky="w", padx=(0, 16), pady=10)
         return var
 
@@ -125,7 +125,7 @@ class SettingsWindow:
         current_mic = self.cfg.get("device") or "System default"
         self._mic_var = tk.StringVar(value=current_mic if current_mic in mic_labels else "System default")
         mic_cb = ttk.Combobox(frame, textvariable=self._mic_var, values=mic_labels,
-                              state="readonly", width=42)
+                              state="readonly", width=52)
         mic_cb.grid(row=4, column=1, sticky="w", padx=(0, 16), pady=10)
 
         self._row(frame, "Max duration", 5)
