@@ -16,6 +16,11 @@ SETTINGS_URL = (
 # Use version tuple so we always get e.g. "python3.13" regardless of venv symlink names
 _PYTHON_BINARY = f"python{sys.version_info.major}.{sys.version_info.minor}"
 
+# The real on-disk binary the venv symlink resolves to. macOS keys Accessibility
+# permission to this resolved Mach-O binary, and — unlike the /opt/homebrew/bin
+# symlink — it is selectable/draggable in the Accessibility picker.
+_REAL_BIN = os.path.realpath(sys.executable)
+
 
 def check():
     """Block until Accessibility permission is granted. No-op on non-macOS."""
@@ -101,11 +106,13 @@ def _show_onboarding():
     # ── timeline steps ────────────────────────────────────────────────────────
     steps = [
         ("Open Accessibility Settings",
-         "Click the button below — it opens the right pane directly."),
-        ("Add an application",
-         f"Click  +  in the Accessibility list."),
-        ("Navigate to Python",
-         f"Press Cmd+Shift+G, type  /opt/homebrew/bin\nthen select  \"{_PYTHON_BINARY}\"."),
+         "Click the dark button below — it opens the right pane directly."),
+        ("Reveal Python in Finder",
+         f"Click \"Reveal {_PYTHON_BINARY}\" below — Finder opens with the\n"
+         "real binary already highlighted."),
+        ("Drag it into the list",
+         f"Drag the highlighted \"{_PYTHON_BINARY}\" from Finder onto the\n"
+         "Accessibility list."),
         ("Enable the toggle",
          f"Switch  \"{_PYTHON_BINARY}\"  to ON."),
     ]
@@ -150,7 +157,8 @@ def _show_onboarding():
                     highlightthickness=1, highlightbackground=WARN_BD)
     warn.pack(fill="x", padx=PAD, pady=(8, 0))
     tk.Label(warn,
-             text=f"⚠   Murmur appears as \"{_PYTHON_BINARY}\" in the list — not as Murmur.",
+             text=f"⚠   Drag it in — the  +  button greys out \"{_PYTHON_BINARY}\". "
+                  "It appears in the list as Python, not as Murmur.",
              bg=WARN_BG, fg=WARN_FG, font=("Helvetica Neue", 11),
              anchor="w", justify="left", wraplength=370,
              padx=12, pady=8).pack(fill="x")
@@ -169,6 +177,21 @@ def _show_onboarding():
 
     btn_frame.bind("<Button-1>", _open_settings)
     btn_label.bind("<Button-1>", _open_settings)
+
+    # ── secondary button: reveal real binary in Finder for drag-and-drop ───────
+    reveal_wrap = tk.Frame(root, bg=NUM_BD)  # 1px border via bg
+    reveal_wrap.pack(fill="x", padx=PAD, pady=(8, 0))
+    reveal_label = tk.Label(reveal_wrap, text=f"Reveal {_PYTHON_BINARY} in Finder",
+                            bg=BADGE_BG, fg=TEXT,
+                            font=("Helvetica Neue", 11, "bold"),
+                            padx=14, pady=8, cursor="hand2")
+    reveal_label.pack(fill="x", padx=1, pady=1)
+
+    def _reveal(e=None):
+        subprocess.run(["open", "-R", _REAL_BIN])
+
+    reveal_wrap.bind("<Button-1>", _reveal)
+    reveal_label.bind("<Button-1>", _reveal)
 
     # ── status ────────────────────────────────────────────────────────────────
     status_var = tk.StringVar(value="Waiting for permission…")
