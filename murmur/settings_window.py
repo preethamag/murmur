@@ -69,7 +69,7 @@ def _value_for(options, label):
 # ── window ────────────────────────────────────────────────────────────────────
 
 class SettingsWindow:
-    W, H = 620, 460
+    W, H = 620, 490
 
     def __init__(self):
         self.cfg = config.load()
@@ -98,13 +98,14 @@ class SettingsWindow:
         labels = [lbl for lbl, _ in options]
         var = tk.StringVar(value=_label_for(options, current_val))
         cb = ttk.Combobox(parent, textvariable=var, values=labels,
-                          state="readonly", width=52)
-        cb.grid(row=row, column=1, sticky="w", padx=(0, 16), pady=10)
+                          state="readonly")
+        cb.grid(row=row, column=1, sticky="ew", padx=(0, 20), pady=10)
         return var
 
     def _build(self, root):
         frame = tk.Frame(root, padx=8, pady=8)
         frame.pack(fill="both", expand=True)
+        frame.columnconfigure(1, weight=1)
 
         self._row(frame, "Input mode", 0)
         self._mode_var = self._combo(frame, INPUT_MODES, self.cfg.get("input_mode", "hold"), 0)
@@ -125,8 +126,8 @@ class SettingsWindow:
         current_mic = self.cfg.get("device") or "System default"
         self._mic_var = tk.StringVar(value=current_mic if current_mic in mic_labels else "System default")
         mic_cb = ttk.Combobox(frame, textvariable=self._mic_var, values=mic_labels,
-                              state="readonly", width=52)
-        mic_cb.grid(row=4, column=1, sticky="w", padx=(0, 16), pady=10)
+                              state="readonly")
+        mic_cb.grid(row=4, column=1, sticky="ew", padx=(0, 20), pady=10)
 
         self._row(frame, "Max duration", 5)
         dur_frame = tk.Frame(frame)
@@ -161,7 +162,7 @@ class SettingsWindow:
         # Divider + Save
         ttk.Separator(root, orient="horizontal").pack(fill="x", pady=(0, 10))
         btn_frame = tk.Frame(root)
-        btn_frame.pack()
+        btn_frame.pack(pady=(0, 16))
         tk.Button(btn_frame, text="  Save  ", command=self._save,
                   padx=12, pady=4).pack()
 
