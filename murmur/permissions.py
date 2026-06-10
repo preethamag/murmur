@@ -43,8 +43,8 @@ def _has_access() -> bool:
         return True
 
 
-def _circle(parent, text, size=28, bg="#ffffff", fg="#1c1c1e",
-            border="#d1d1d6", font_size=12):
+def _circle(parent, text, size=26, bg="#ffffff", fg="#1c1c1e",
+            border="#d1d1d6", font_size=10):
     """Draw a circular number badge using Canvas."""
     c = tk.Canvas(parent, width=size, height=size, bg=parent["bg"],
                   highlightthickness=0)
@@ -75,7 +75,7 @@ def _show_onboarding():
     root.configure(bg=BG)
     root.attributes("-topmost", True)
 
-    W, H = 460, 600
+    W, H = 460, 560
     sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
     root.geometry(f"{W}x{H}+{(sw-W)//2}+{(sh-H)//2}")
 
@@ -86,16 +86,16 @@ def _show_onboarding():
                            highlightthickness=1, highlightbackground=BORDER)
     badge_frame.pack(anchor="w", padx=PAD, pady=(14, 0))
     tk.Label(badge_frame, text="One-time setup", bg=BADGE_BG, fg=BADGE_FG,
-             font=("Helvetica Neue", 11, "bold"), padx=10, pady=4).pack()
+             font=("Helvetica Neue", 10, "bold"), padx=10, pady=3).pack()
 
     # ── title ─────────────────────────────────────────────────────────────────
     tk.Label(root, text="Accessibility access needed",
-             bg=BG, fg=TEXT, font=("Helvetica Neue", 18, "bold"),
+             bg=BG, fg=TEXT, font=("Helvetica Neue", 15, "bold"),
              anchor="w", justify="left").pack(fill="x", padx=PAD, pady=(10, 0))
 
     tk.Label(root,
              text="Required so Murmur can type into other apps.\nTakes about 30 seconds.",
-             bg=BG, fg=MUTED, font=("Helvetica Neue", 13),
+             bg=BG, fg=MUTED, font=("Helvetica Neue", 11),
              anchor="w", justify="left").pack(fill="x", padx=PAD, pady=(4, 12))
 
     # ── separator ─────────────────────────────────────────────────────────────
@@ -140,10 +140,10 @@ def _show_onboarding():
                    padx=(10, 0), pady=(2, 12 if not is_last else 0))
 
         tk.Label(right, text=title, bg=BG, fg=TEXT,
-                 font=("Helvetica Neue", 13, "bold"),
+                 font=("Helvetica Neue", 12, "bold"),
                  anchor="w").pack(fill="x")
         tk.Label(right, text=desc, bg=BG, fg=MUTED,
-                 font=("Helvetica Neue", 12),
+                 font=("Helvetica Neue", 11),
                  anchor="w", justify="left", wraplength=360).pack(fill="x")
 
     # ── warning ───────────────────────────────────────────────────────────────
@@ -154,17 +154,17 @@ def _show_onboarding():
     warn.pack(fill="x", padx=PAD, pady=(8, 0))
     tk.Label(warn,
              text=f"⚠   Murmur appears as \"{_PYTHON_BINARY}\" in the list — not as Murmur.",
-             bg=WARN_BG, fg=WARN_FG, font=("Helvetica Neue", 12),
+             bg=WARN_BG, fg=WARN_FG, font=("Helvetica Neue", 11),
              anchor="w", justify="left", wraplength=370,
-             padx=12, pady=9).pack(fill="x")
+             padx=12, pady=8).pack(fill="x")
 
     # ── button (Frame+Label to force bg color on macOS) ───────────────────────
     btn_frame = tk.Frame(root, bg=BTN_BG, cursor="hand2")
     btn_frame.pack(fill="x", padx=PAD, pady=(14, 0))
     btn_label = tk.Label(btn_frame, text="Open Accessibility Settings  →",
                          bg=BTN_BG, fg="white",
-                         font=("Helvetica Neue", 13, "bold"),
-                         padx=18, pady=11, cursor="hand2")
+                         font=("Helvetica Neue", 12, "bold"),
+                         padx=18, pady=10, cursor="hand2")
     btn_label.pack(fill="x")
 
     def _open_settings(e=None):
@@ -176,7 +176,7 @@ def _show_onboarding():
     # ── status ────────────────────────────────────────────────────────────────
     status_var = tk.StringVar(value="Waiting for permission…")
     status_lbl = tk.Label(root, textvariable=status_var,
-                          bg=BG, fg=SUBTLE, font=("Helvetica Neue", 11))
+                          bg=BG, fg=SUBTLE, font=("Helvetica Neue", 10))
     status_lbl.pack(pady=(10, 20))
 
     def _poll():
@@ -184,9 +184,9 @@ def _show_onboarding():
             badge_frame.winfo_children()[0].config(text="✓  Permission granted")
             for circ in circles:
                 circ.delete("all")
-                circ.create_oval(1, 1, 27, 27, outline=NUM_BD, width=1.5, fill=BADGE_BG)
-                circ.create_text(14, 14, text="✓",
-                                 font=("Helvetica Neue", 12, "bold"), fill=MUTED)
+                circ.create_oval(1, 1, 25, 25, outline=NUM_BD, width=1.5, fill=BADGE_BG)
+                circ.create_text(13, 13, text="✓",
+                                 font=("Helvetica Neue", 10, "bold"), fill=MUTED)
             btn_frame.config(bg="#3a3a3c")
             btn_label.config(text="Starting Murmur…", bg="#3a3a3c", state="disabled",
                              cursor="arrow")
