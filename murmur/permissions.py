@@ -75,10 +75,7 @@ def _show_onboarding():
     root.configure(bg=BG)
     root.attributes("-topmost", True)
 
-    W, H = 460, 600
-    sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
-    root.geometry(f"{W}x{H}+{(sw-W)//2}+{(sh-H)//2}")
-
+    W = 460
     PAD = 28
 
     # ── badge ─────────────────────────────────────────────────────────────────
@@ -196,6 +193,12 @@ def _show_onboarding():
             root.after(1200, root.destroy)
         else:
             root.after(2000, _poll)
+
+    # Size the window to fit its content exactly, then center it.
+    root.update_idletasks()
+    H = root.winfo_reqheight()
+    sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
+    root.geometry(f"{W}x{H}+{(sw-W)//2}+{(sh-H)//2}")
 
     root.after(2000, _poll)
     root.mainloop()
