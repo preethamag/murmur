@@ -76,6 +76,18 @@ if ! "$PYTHON" -c "import tkinter" 2>/dev/null; then
   fi
 fi
 
+# ── ffmpeg check (required by mlx-whisper / faster-whisper for audio decoding) ─
+if ! command -v ffmpeg &>/dev/null; then
+  echo "  ffmpeg not found — installing…"
+  if command -v brew &>/dev/null; then
+    brew install ffmpeg
+  else
+    echo "  ✗  ffmpeg is required but not installed."
+    echo "     Install it with:  brew install ffmpeg"
+    exit 1
+  fi
+fi
+
 # ── Install location ──────────────────────────────────────────────────────────
 INSTALL_DIR="$HOME/Applications/Murmur"
 
