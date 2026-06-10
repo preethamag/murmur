@@ -75,7 +75,7 @@ def _show_onboarding():
     root.configure(bg=BG)
     root.attributes("-topmost", True)
 
-    W, H = 460, 560
+    W, H = 460, 600
     sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
     root.geometry(f"{W}x{H}+{(sw-W)//2}+{(sh-H)//2}")
 
