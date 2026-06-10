@@ -2,7 +2,7 @@ import sys
 import platform
 
 _MLX_IDS = {
-    "turbo": "mlx-community/whisper-large-v3-turbo-mlx",
+    "turbo": "mlx-community/whisper-large-v3-turbo",
 }
 _FASTER_IDS = {
     "turbo": "large-v3-turbo",

@@ -12,6 +12,27 @@ echo ""
 echo "  Open-source voice dictation — powered by local Whisper"
 echo ""
 
+# ── Install mode selection ───────────────────────────────────────────────────
+echo "  How would you like to install Murmur?"
+echo ""
+echo "  1) App bundle (recommended)"
+echo "     Builds Murmur.app and installs it to ~/Applications."
+echo "     Shows as \"Murmur\" in Accessibility permissions."
+echo "     Can be set to launch at login."
+echo ""
+echo "  2) Developer mode"
+echo "     Installs as an editable Python package (pip install -e .)."
+echo "     Run via the 'murmur' CLI command."
+echo "     Best for contributors and development."
+echo ""
+read -rp "  Enter choice [default: 1]: " install_mode </dev/tty
+echo ""
+
+case "$install_mode" in
+  2) INSTALL_MODE="dev" ;;
+  *) INSTALL_MODE="app" ;;
+esac
+
 # ── Python check (must pass before anything else runs) ────────────────────────
 PYTHON=""
 for candidate in python3.13 python3.12 python3.11 python3.10 python3; do
@@ -199,7 +220,7 @@ ARCH=$($PYTHON -c "import platform; print(platform.machine())")
 if [ "$ARCH" = "arm64" ]; then
   # Apple Silicon — use mlx-whisper
   if [ "$MODEL" = "turbo" ]; then
-    MLX_ID="mlx-community/whisper-large-v3-turbo-mlx"
+    MLX_ID="mlx-community/whisper-large-v3-turbo"
   else
     MLX_ID="mlx-community/whisper-${MODEL}-mlx"
   fi
@@ -234,12 +255,10 @@ print("  Model ready.")
 PYEOF
 fi
 
-PYTHON_BIN=$(basename "$($PYTHON -c "import sys; print(sys.executable)")")
-
 # Determine which Whisper ID was actually downloaded
 if [ "$ARCH" = "arm64" ]; then
   if [ "$MODEL" = "turbo" ]; then
-    WHISPER_ID="mlx-community/whisper-large-v3-turbo-mlx"
+    WHISPER_ID="mlx-community/whisper-large-v3-turbo"
   else
     WHISPER_ID="mlx-community/whisper-${MODEL}-mlx"
   fi
@@ -251,50 +270,218 @@ else
   fi
 fi
 
-echo ""
-echo "  ✓ Murmur installed to: $INSTALL_DIR"
-echo "  ✓ Whisper model: $MODEL"
-echo ""
-echo "  ─────────────────────────────────────────────────────"
-echo "  Run Murmur:"
-echo ""
-echo "      murmur"
-echo ""
-echo "  ─────────────────────────────────────────────────────"
-echo "  First launch — a setup screen will guide you through:"
-echo ""
-echo "    1. Grant Microphone access when macOS prompts"
-echo "    2. Grant Accessibility access:"
-echo "         System Settings › Privacy & Security › Accessibility"
-echo ""
-echo "  ⚠  IMPORTANT: In the Accessibility list, Murmur appears"
-echo "     as \"$PYTHON_BIN\" — not as Murmur. Add that entry."
-echo ""
-echo "  ─────────────────────────────────────────────────────"
-echo "  Default hotkey: hold Right Option (⌥) while speaking"
-echo "  Config file:    ~/.murmur/config.yaml"
-echo ""
+# ══════════════════════════════════════════════════════════════════════════════
+# App bundle install path
+# ══════════════════════════════════════════════════════════════════════════════
 
-# ── PATH check ────────────────────────────────────────────────────────────────
-if ! command -v murmur &>/dev/null; then
-  echo "  ⚠  The 'murmur' command is not on your PATH yet."
+if [ "$INSTALL_MODE" = "app" ]; then
+
   echo ""
-  echo "     Add this line to your ~/.zshrc (or ~/.bash_profile):"
+  echo "  ─────────────────────────────────────────────────────"
+  echo "  Building Murmur.app…"
+  echo "  ─────────────────────────────────────────────────────"
   echo ""
-  echo "         export PATH=\"$VENV_DIR/bin:\$PATH\""
+
+  # Install PyInstaller if needed
+  if ! $PYTHON -c "import PyInstaller" 2>/dev/null; then
+    echo "  Installing PyInstaller…"
+    $PIP install pyinstaller -q
+  fi
+
+  # Run build_app.sh which handles the PyInstaller build + codesign
+  if bash "$INSTALL_DIR/build_app.sh"; then
+    echo ""
+    echo "  ✓ Murmur.app built successfully."
+  else
+    echo ""
+    echo "  ✗  App bundle build failed."
+    echo "     Falling back to developer mode (CLI)."
+    echo "     You can try building manually later with: ./build_app.sh"
+    echo ""
+    INSTALL_MODE="dev"
+  fi
+fi
+
+if [ "$INSTALL_MODE" = "app" ]; then
+  # ── Copy .app to ~/Applications ──────────────────────────────────────────
+  APP_SRC="$INSTALL_DIR/dist/Murmur.app"
+  APP_DEST="$HOME/Applications/Murmur.app"
+
   echo ""
-  echo "     Then restart your terminal, or run:"
-  echo "         source ~/.zshrc"
+  echo "  Where would you like to install Murmur.app?"
   echo ""
-  echo "     Alternatively, run Murmur directly with:"
-  echo "         $PYTHON -m murmur"
+  echo "  1) ~/Applications/Murmur.app  (recommended — no admin needed)"
+  echo "  2) /Applications/Murmur.app   (system-wide, requires password)"
   echo ""
+  read -rp "  Enter choice [default: 1]: " app_dest_choice </dev/tty
+  echo ""
+
+  case "$app_dest_choice" in
+    2)
+      APP_DEST="/Applications/Murmur.app"
+      NEEDS_SUDO=true
+      ;;
+    *)
+      APP_DEST="$HOME/Applications/Murmur.app"
+      NEEDS_SUDO=false
+      ;;
+  esac
+
+  # Create destination directory if needed
+  DEST_DIR="$(dirname "$APP_DEST")"
+  if [ ! -d "$DEST_DIR" ]; then
+    if $NEEDS_SUDO; then
+      sudo mkdir -p "$DEST_DIR"
+    else
+      mkdir -p "$DEST_DIR"
+    fi
+  fi
+
+  # Remove old version if present
+  if [ -d "$APP_DEST" ]; then
+    echo "  Removing previous Murmur.app…"
+    if $NEEDS_SUDO; then
+      sudo rm -rf "$APP_DEST"
+    else
+      rm -rf "$APP_DEST"
+    fi
+  fi
+
+  echo "  Installing Murmur.app to: $APP_DEST"
+  if $NEEDS_SUDO; then
+    sudo cp -R "$APP_SRC" "$APP_DEST"
+  else
+    cp -R "$APP_SRC" "$APP_DEST"
+  fi
+  echo "  ✓ Murmur.app installed."
+  echo ""
+
+  # ── Launch at login ──────────────────────────────────────────────────────
+  echo "  Would you like Murmur to start automatically at login?"
+  echo ""
+  read -rp "  Start at login? [Y/n]: " launch_choice </dev/tty
+  echo ""
+
+  if [[ ! "$launch_choice" =~ ^[Nn]$ ]]; then
+    PLIST_DIR="$HOME/Library/LaunchAgents"
+    PLIST_FILE="$PLIST_DIR/com.murmur.app.plist"
+    mkdir -p "$PLIST_DIR"
+
+    cat > "$PLIST_FILE" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.murmur.app</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/open</string>
+        <string>$APP_DEST</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <false/>
+</dict>
+</plist>
+PLIST
+
+    # Attempt to bootstrap for immediate availability
+    launchctl bootstrap "gui/$(id -u)" "$PLIST_FILE" 2>/dev/null || true
+
+    echo "  ✓ Murmur will start at login."
+    echo "    LaunchAgent: $PLIST_FILE"
+    echo ""
+    echo "    To disable later, run:"
+    echo "      launchctl bootout gui/$(id -u)/com.murmur.app"
+    echo "      rm $PLIST_FILE"
+    echo ""
+  else
+    echo "  Skipped. You can enable this later in Murmur's Settings."
+    echo ""
+  fi
+
+  # ── Summary (app mode) ────────────────────────────────────────────────────
+  echo ""
+  echo "  ✓ Murmur installed to: $APP_DEST"
+  echo "  ✓ Whisper model: $MODEL"
+  echo ""
+  echo "  ─────────────────────────────────────────────────────"
+  echo "  Launch Murmur:"
+  echo ""
+  echo "      open \"$APP_DEST\""
+  echo ""
+  echo "  Or find \"Murmur\" in Spotlight / Launchpad."
+  echo ""
+  echo "  ─────────────────────────────────────────────────────"
+  echo "  First launch — a setup screen will guide you through:"
+  echo ""
+  echo "    1. Grant Microphone access when macOS prompts"
+  echo "    2. Grant Accessibility access:"
+  echo "         System Settings > Privacy & Security > Accessibility"
+  echo "         Click + and add \"Murmur\""
+  echo ""
+  echo "  The app appears as \"Murmur\" in the Accessibility list"
+  echo "  (not as python3.X — that's the benefit of the .app bundle)."
+  echo ""
+  echo "  ─────────────────────────────────────────────────────"
+  echo "  Default hotkey: hold Right Option while speaking"
+  echo "  Config file:    ~/.murmur/config.yaml"
+  echo ""
+
+else
+  # ══════════════════════════════════════════════════════════════════════════
+  # Developer mode (CLI) — original behavior
+  # ══════════════════════════════════════════════════════════════════════════
+
+  PYTHON_BIN=$(basename "$($PYTHON -c "import sys; print(sys.executable)")")
+
+  echo ""
+  echo "  ✓ Murmur installed to: $INSTALL_DIR"
+  echo "  ✓ Whisper model: $MODEL"
+  echo ""
+  echo "  ─────────────────────────────────────────────────────"
+  echo "  Run Murmur:"
+  echo ""
+  echo "      murmur"
+  echo ""
+  echo "  ─────────────────────────────────────────────────────"
+  echo "  First launch — a setup screen will guide you through:"
+  echo ""
+  echo "    1. Grant Microphone access when macOS prompts"
+  echo "    2. Grant Accessibility access:"
+  echo "         System Settings > Privacy & Security > Accessibility"
+  echo ""
+  echo "  ⚠  IMPORTANT: In the Accessibility list, Murmur appears"
+  echo "     as \"$PYTHON_BIN\" — not as Murmur. Add that entry."
+  echo ""
+  echo "  ─────────────────────────────────────────────────────"
+  echo "  Default hotkey: hold Right Option while speaking"
+  echo "  Config file:    ~/.murmur/config.yaml"
+  echo ""
+
+  # ── PATH check ──────────────────────────────────────────────────────────
+  if ! command -v murmur &>/dev/null; then
+    echo "  ⚠  The 'murmur' command is not on your PATH yet."
+    echo ""
+    echo "     Add this line to your ~/.zshrc (or ~/.bash_profile):"
+    echo ""
+    echo "         export PATH=\"$VENV_DIR/bin:\$PATH\""
+    echo ""
+    echo "     Then restart your terminal, or run:"
+    echo "         source ~/.zshrc"
+    echo ""
+    echo "     Alternatively, run Murmur directly with:"
+    echo "         $PYTHON -m murmur"
+    echo ""
+  fi
 fi
 
 # ── Standalone model usage instructions ───────────────────────────────────────
 echo ""
 echo "  ╔═════════════════════════════════════════════════════════════╗"
-echo "  ║  💡  Your models work outside Murmur too                   ║"
+echo "  ║  Your models work outside Murmur too                       ║"
 echo "  ║      Copy or save the instructions below.                  ║"
 echo "  ╚═════════════════════════════════════════════════════════════╝"
 echo ""
