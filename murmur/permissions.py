@@ -158,17 +158,20 @@ def _show_onboarding():
              anchor="w", justify="left", wraplength=370,
              padx=12, pady=9).pack(fill="x")
 
-    # ── button ────────────────────────────────────────────────────────────────
-    btn = tk.Button(
-        root,
-        text="Open Accessibility Settings  →",
-        command=lambda: subprocess.run(["open", SETTINGS_URL]),
-        bg=BTN_BG, fg="white",
-        activebackground="#3a3a3c", activeforeground="white",
-        font=("Helvetica Neue", 13, "bold"),
-        bd=0, padx=18, pady=11, cursor="hand2", relief="flat",
-    )
-    btn.pack(fill="x", padx=PAD, pady=(14, 0))
+    # ── button (Frame+Label to force bg color on macOS) ───────────────────────
+    btn_frame = tk.Frame(root, bg=BTN_BG, cursor="hand2")
+    btn_frame.pack(fill="x", padx=PAD, pady=(14, 0))
+    btn_label = tk.Label(btn_frame, text="Open Accessibility Settings  →",
+                         bg=BTN_BG, fg="white",
+                         font=("Helvetica Neue", 13, "bold"),
+                         padx=18, pady=11, cursor="hand2")
+    btn_label.pack(fill="x")
+
+    def _open_settings(e=None):
+        subprocess.run(["open", SETTINGS_URL])
+
+    btn_frame.bind("<Button-1>", _open_settings)
+    btn_label.bind("<Button-1>", _open_settings)
 
     # ── status ────────────────────────────────────────────────────────────────
     status_var = tk.StringVar(value="Waiting for permission…")
@@ -184,8 +187,11 @@ def _show_onboarding():
                 circ.create_oval(1, 1, 27, 27, outline=NUM_BD, width=1.5, fill=BADGE_BG)
                 circ.create_text(14, 14, text="✓",
                                  font=("Helvetica Neue", 12, "bold"), fill=MUTED)
-            btn.config(text="Starting Murmur…", bg="#3a3a3c",
-                       activebackground="#3a3a3c", state="disabled")
+            btn_frame.config(bg="#3a3a3c")
+            btn_label.config(text="Starting Murmur…", bg="#3a3a3c", state="disabled",
+                             cursor="arrow")
+            btn_frame.unbind("<Button-1>")
+            btn_label.unbind("<Button-1>")
             status_var.set("Permission confirmed — launching")
             root.after(1200, root.destroy)
         else:
