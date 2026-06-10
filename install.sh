@@ -131,8 +131,7 @@ $PIP install --upgrade pip setuptools wheel -q
 
 echo "  Installing dependencies…"
 $PIP install -r requirements-mac.txt -q
-# Use non-editable install so it works with any pip version
-$PIP install . -q
+$PIP install -e . -q
 
 # ── Ollama (AI Cleanup + Vocabulary) ──────────────────────────────────────────
 echo "  Checking for Ollama (used for AI cleanup and vocabulary corrections)..."
