@@ -64,13 +64,6 @@ def main():
 
     _sub = {"--permissions", "--settings", "--vocabulary", "--fix"}
     if _sub & set(sys.argv):
-        if sys.platform == "darwin":
-            try:
-                import AppKit
-                AppKit.NSApplication.sharedApplication().setActivationPolicy_(1)
-            except ImportError:
-                pass
-
         if "--permissions" in sys.argv:
             from murmur.permissions import _has_access, _show_onboarding
             if not _has_access():
