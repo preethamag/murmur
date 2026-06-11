@@ -30,8 +30,6 @@ def _run_mac(app):
                 rumps.MenuItem("Settings",              callback=self._open_settings),
                 rumps.MenuItem("Vocabulary",            callback=self._open_vocabulary),
                 rumps.MenuItem("Fix Last Transcription", callback=self._fix_last),
-                None,
-                rumps.MenuItem("Quit", callback=rumps.quit_application),
             ]
 
         def set_state(self, state):

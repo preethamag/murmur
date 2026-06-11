@@ -146,6 +146,14 @@ class VocabularyWindow:
 class _Dialog(tk.Toplevel):
     """Generic 1-or-2-field add dialog. Calls on_save(tuple_of_values) on confirm."""
 
+    def _fg_color(self):
+        try:
+            bg = self.winfo_rgb(self.cget("bg"))
+            luminance = (bg[0] * 0.299 + bg[1] * 0.587 + bg[2] * 0.114) / 65535
+            return "white" if luminance < 0.5 else "black"
+        except Exception:
+            return "black"
+
     def __init__(self, parent, title, fields, on_save):
         super().__init__(parent)
         self._on_save = on_save
@@ -168,7 +176,7 @@ class _Dialog(tk.Toplevel):
             e.config(fg="gray")
             e.bind("<FocusIn>", lambda ev, entry=e, ph=placeholder: (
                 entry.delete(0, "end") if entry.get() == ph else None,
-                entry.config(fg="black"),
+                entry.config(fg=self._fg_color()),
             ))
             self._entries.append((e, placeholder))
 
