@@ -2,6 +2,14 @@
 Checks for macOS Accessibility permission on first launch.
 Shows a guided onboarding window that deep-links to System Settings
 and auto-detects when the user grants access.
+
+When running as a .app bundle (via PyInstaller), the app IS its own
+responsible process — so the Accessibility dialog shows "Murmur" and
+the user just needs to click + and add Murmur.app. No Finder reveal needed.
+
+When running as a CLI script (via `python -m murmur` or `murmur`), the
+responsible process is the python3.X binary, and the user must drag
+the real binary into the Accessibility list.
 """
 
 import os
@@ -22,13 +30,21 @@ _PYTHON_BINARY = f"python{sys.version_info.major}.{sys.version_info.minor}"
 _REAL_BIN = os.path.realpath(sys.executable)
 
 
+def _is_app_bundle() -> bool:
+    """Return True if we are running inside a PyInstaller .app bundle."""
+    return getattr(sys, "frozen", False)
+
+
 def check():
     """Block until Accessibility permission is granted. No-op on non-macOS."""
     if sys.platform != "darwin":
         return
     if _has_access():
         return
-    _show_onboarding()
+    if getattr(sys, "frozen", False):
+        subprocess.run([sys.executable, "--permissions"])
+    else:
+        _show_onboarding()
 
 
 def _has_access() -> bool:
@@ -74,6 +90,8 @@ def _show_onboarding():
     WARN_FG = "#92400e"
     BTN_BG  = "#1c1c1e"
 
+    is_bundle = _is_app_bundle()
+
     root = tk.Tk()
     root.title("Murmur — Setup")
     root.resizable(False, False)
@@ -104,18 +122,32 @@ def _show_onboarding():
     tk.Frame(root, bg=BORDER, height=1).pack(fill="x", padx=PAD)
 
     # ── timeline steps ────────────────────────────────────────────────────────
-    steps = [
-        ("Open Accessibility Settings",
-         "Click the dark button below — it opens the right pane directly."),
-        ("Reveal Python in Finder",
-         f"Click \"Reveal {_PYTHON_BINARY}\" below — Finder opens with the\n"
-         "real binary already highlighted."),
-        ("Drag it into the list",
-         f"Drag the highlighted \"{_PYTHON_BINARY}\" from Finder onto the\n"
-         "Accessibility list."),
-        ("Enable the toggle",
-         f"Switch  \"{_PYTHON_BINARY}\"  to ON."),
-    ]
+    if is_bundle:
+        # .app bundle: Murmur shows up as "Murmur" in the Accessibility list
+        steps = [
+            ("Open Accessibility Settings",
+             "Click the dark button below — it opens the right pane directly."),
+            ("Click the  +  button",
+             "In the Accessibility list, click the  +  button to add an app."),
+            ("Select Murmur",
+             "Navigate to Applications and select Murmur, then click Open."),
+            ("Enable the toggle",
+             'Switch "Murmur" to ON.'),
+        ]
+    else:
+        # CLI mode: process shows as python3.X
+        steps = [
+            ("Open Accessibility Settings",
+             "Click the dark button below — it opens the right pane directly."),
+            ("Reveal Python in Finder",
+             f'Click "Reveal {_PYTHON_BINARY}" below — Finder opens with the\n'
+             "real binary already highlighted."),
+            ("Drag it into the list",
+             f'Drag the highlighted "{_PYTHON_BINARY}" from Finder onto the\n'
+             "Accessibility list."),
+            ("Enable the toggle",
+             f'Switch  "{_PYTHON_BINARY}"  to ON.'),
+        ]
 
     circles = []
     outer = tk.Frame(root, bg=BG)
@@ -153,15 +185,26 @@ def _show_onboarding():
     # ── warning ───────────────────────────────────────────────────────────────
     tk.Frame(root, bg=BORDER, height=1).pack(fill="x", padx=PAD, pady=(8, 0))
 
-    warn = tk.Frame(root, bg=WARN_BG,
-                    highlightthickness=1, highlightbackground=WARN_BD)
-    warn.pack(fill="x", padx=PAD, pady=(8, 0))
-    tk.Label(warn,
-             text=f"⚠   Drag it in — the  +  button greys out \"{_PYTHON_BINARY}\". "
-                  "It appears in the list as Python, not as Murmur.",
-             bg=WARN_BG, fg=WARN_FG, font=("Helvetica Neue", 11),
-             anchor="w", justify="left", wraplength=370,
-             padx=12, pady=8).pack(fill="x")
+    if is_bundle:
+        warn = tk.Frame(root, bg=BADGE_BG,
+                        highlightthickness=1, highlightbackground=BORDER)
+        warn.pack(fill="x", padx=PAD, pady=(8, 0))
+        tk.Label(warn,
+                 text='Look for "Murmur" in the Accessibility list.\n'
+                      "If you installed to ~/Applications, navigate there in the + dialog.",
+                 bg=BADGE_BG, fg=BADGE_FG, font=("Helvetica Neue", 11),
+                 anchor="w", justify="left", wraplength=370,
+                 padx=12, pady=8).pack(fill="x")
+    else:
+        warn = tk.Frame(root, bg=WARN_BG,
+                        highlightthickness=1, highlightbackground=WARN_BD)
+        warn.pack(fill="x", padx=PAD, pady=(8, 0))
+        tk.Label(warn,
+                 text=f'⚠   Drag it in — the  +  button greys out "{_PYTHON_BINARY}". '
+                      "It appears in the list as Python, not as Murmur.",
+                 bg=WARN_BG, fg=WARN_FG, font=("Helvetica Neue", 11),
+                 anchor="w", justify="left", wraplength=370,
+                 padx=12, pady=8).pack(fill="x")
 
     # ── button (Frame+Label to force bg color on macOS) ───────────────────────
     btn_frame = tk.Frame(root, bg=BTN_BG, cursor="hand2")
@@ -178,20 +221,21 @@ def _show_onboarding():
     btn_frame.bind("<Button-1>", _open_settings)
     btn_label.bind("<Button-1>", _open_settings)
 
-    # ── secondary button: reveal real binary in Finder for drag-and-drop ───────
-    reveal_wrap = tk.Frame(root, bg=NUM_BD)  # 1px border via bg
-    reveal_wrap.pack(fill="x", padx=PAD, pady=(8, 0))
-    reveal_label = tk.Label(reveal_wrap, text=f"Reveal {_PYTHON_BINARY} in Finder",
-                            bg=BADGE_BG, fg=TEXT,
-                            font=("Helvetica Neue", 11, "bold"),
-                            padx=14, pady=8, cursor="hand2")
-    reveal_label.pack(fill="x", padx=1, pady=1)
+    # ── secondary button: reveal real binary in Finder (CLI mode only) ────────
+    if not is_bundle:
+        reveal_wrap = tk.Frame(root, bg=NUM_BD)  # 1px border via bg
+        reveal_wrap.pack(fill="x", padx=PAD, pady=(8, 0))
+        reveal_label = tk.Label(reveal_wrap, text=f"Reveal {_PYTHON_BINARY} in Finder",
+                                bg=BADGE_BG, fg=TEXT,
+                                font=("Helvetica Neue", 11, "bold"),
+                                padx=14, pady=8, cursor="hand2")
+        reveal_label.pack(fill="x", padx=1, pady=1)
 
-    def _reveal(e=None):
-        subprocess.run(["open", "-R", _REAL_BIN])
+        def _reveal(e=None):
+            subprocess.run(["open", "-R", _REAL_BIN])
 
-    reveal_wrap.bind("<Button-1>", _reveal)
-    reveal_label.bind("<Button-1>", _reveal)
+        reveal_wrap.bind("<Button-1>", _reveal)
+        reveal_label.bind("<Button-1>", _reveal)
 
     # ── status ────────────────────────────────────────────────────────────────
     status_var = tk.StringVar(value="Waiting for permission…")

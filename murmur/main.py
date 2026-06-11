@@ -190,10 +190,15 @@ class MurmurController:
 
     # ── tray actions ───────────────────────────────────────────────────────────
 
+    def _subprocess_cmd(self, module, flag):
+        if getattr(sys, "frozen", False):
+            return [sys.executable, flag]
+        return [sys.executable, "-m", module]
+
     def open_settings(self):
         def _run():
             proc = subprocess.Popen(
-                [sys.executable, "-m", "murmur.settings_window"], text=True
+                self._subprocess_cmd("murmur.settings_window", "--settings"), text=True
             )
             proc.wait()
             if proc.returncode == 0:
@@ -202,20 +207,18 @@ class MurmurController:
         threading.Thread(target=_run, daemon=True).start()
 
     def open_vocabulary(self):
+        cmd = self._subprocess_cmd("murmur.vocabulary_window", "--vocabulary")
         threading.Thread(
-            target=lambda: subprocess.Popen(
-                [sys.executable, "-m", "murmur.vocabulary_window"], text=True
-            ).wait(),
+            target=lambda: subprocess.Popen(cmd, text=True).wait(),
             daemon=True,
         ).start()
 
     def fix_last(self):
         if not _LAST_FILE.exists():
             return
+        cmd = self._subprocess_cmd("murmur.fix_window", "--fix")
         threading.Thread(
-            target=lambda: subprocess.Popen(
-                [sys.executable, "-m", "murmur.fix_window"], text=True
-            ).wait(),
+            target=lambda: subprocess.Popen(cmd, text=True).wait(),
             daemon=True,
         ).start()
 
