@@ -62,23 +62,32 @@ def main():
     _patch_sys_executable_for_subprocesses()
     _setup_environment()
 
-    if "--permissions" in sys.argv:
-        from murmur.permissions import _has_access, _show_onboarding
-        if not _has_access():
-            _show_onboarding()
-        sys.exit(0)
-    if "--settings" in sys.argv:
-        from murmur.settings_window import SettingsWindow
-        SettingsWindow()
-        sys.exit(0)
-    if "--vocabulary" in sys.argv:
-        from murmur.vocabulary_window import VocabularyWindow
-        VocabularyWindow()
-        sys.exit(0)
-    if "--fix" in sys.argv:
-        from murmur.fix_window import FixWindow
-        FixWindow()
-        sys.exit(0)
+    _sub = {"--permissions", "--settings", "--vocabulary", "--fix"}
+    if _sub & set(sys.argv):
+        if sys.platform == "darwin":
+            try:
+                import AppKit
+                AppKit.NSApplication.sharedApplication().setActivationPolicy_(1)
+            except ImportError:
+                pass
+
+        if "--permissions" in sys.argv:
+            from murmur.permissions import _has_access, _show_onboarding
+            if not _has_access():
+                _show_onboarding()
+            sys.exit(0)
+        if "--settings" in sys.argv:
+            from murmur.settings_window import SettingsWindow
+            SettingsWindow()
+            sys.exit(0)
+        if "--vocabulary" in sys.argv:
+            from murmur.vocabulary_window import VocabularyWindow
+            VocabularyWindow()
+            sys.exit(0)
+        if "--fix" in sys.argv:
+            from murmur.fix_window import FixWindow
+            FixWindow()
+            sys.exit(0)
 
     from murmur.main import main as murmur_main
     murmur_main()
