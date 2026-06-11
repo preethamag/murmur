@@ -98,12 +98,6 @@ def _show_onboarding():
     root.configure(bg=BG)
     root.attributes("-topmost", True)
 
-    if getattr(sys, "frozen", False) and sys.platform == "darwin":
-        try:
-            import AppKit
-            AppKit.NSApplication.sharedApplication().setActivationPolicy_(1)
-        except ImportError:
-            pass
 
     W = 460
     PAD = 28
