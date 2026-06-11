@@ -1,7 +1,15 @@
+import os
 import sys
 import queue
 
 ICONS = {"idle": "🎙", "recording": "🔴", "processing": "⏳"}
+
+_RES_DIR = os.path.join(os.path.dirname(__file__), "resources")
+_MAC_ICONS = {
+    "idle":       os.path.join(_RES_DIR, "MenuBarIconTemplate.png"),
+    "recording":  os.path.join(_RES_DIR, "MenuBarIconRecording.png"),
+    "processing": os.path.join(_RES_DIR, "MenuBarIconProcessing.png"),
+}
 
 
 def run_tray(app):
@@ -18,7 +26,9 @@ def _run_mac(app):
 
     class _MacApp(rumps.App):
         def __init__(self, controller):
-            super().__init__("Murmur", title=ICONS["idle"])
+            icon_path = _MAC_ICONS["idle"] if os.path.exists(_MAC_ICONS["idle"]) else None
+            super().__init__("Murmur", icon=icon_path, title=None if icon_path else ICONS["idle"],
+                             template=True)
             self._ctrl = controller
             self._state_queue = queue.Queue()
             self._timer = rumps.Timer(self._poll_state, 0.1)
@@ -39,7 +49,13 @@ def _run_mac(app):
             try:
                 while True:
                     state = self._state_queue.get_nowait()
-                    self.title = ICONS.get(state, ICONS["idle"])
+                    icon_path = _MAC_ICONS.get(state, _MAC_ICONS["idle"])
+                    if os.path.exists(icon_path):
+                        self.icon = icon_path
+                        self.title = None
+                        self.template = (state == "idle")
+                    else:
+                        self.title = ICONS.get(state, ICONS["idle"])
             except queue.Empty:
                 pass
 
