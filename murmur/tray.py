@@ -1,4 +1,5 @@
 import sys
+import queue
 
 ICONS = {"idle": "🎙", "recording": "🔴", "processing": "⏳"}
 
@@ -19,6 +20,9 @@ def _run_mac(app):
         def __init__(self, controller):
             super().__init__("Murmur", title=ICONS["idle"])
             self._ctrl = controller
+            self._state_queue = queue.Queue()
+            self._timer = rumps.Timer(self._poll_state, 0.1)
+            self._timer.start()
             self.menu = [
                 rumps.MenuItem(f"Model: {controller.cfg['model']}"),
                 rumps.MenuItem(f"Hotkey: {controller.cfg['hotkey']}"),
@@ -31,7 +35,15 @@ def _run_mac(app):
             ]
 
         def set_state(self, state):
-            self.title = ICONS.get(state, ICONS["idle"])
+            self._state_queue.put(state)
+
+        def _poll_state(self, _):
+            try:
+                while True:
+                    state = self._state_queue.get_nowait()
+                    self.title = ICONS.get(state, ICONS["idle"])
+            except queue.Empty:
+                pass
 
         def _open_settings(self, _):
             self._ctrl.open_settings()
