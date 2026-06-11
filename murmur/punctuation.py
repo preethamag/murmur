@@ -48,5 +48,5 @@ _COMPILED = [
 
 def apply(text: str) -> str:
     for pattern, char in _COMPILED:
-        text = pattern.sub(char, text)
+        text = pattern.sub(lambda m: char, text)
     return text
