@@ -51,9 +51,10 @@ def _run_mac(app):
                     state = self._state_queue.get_nowait()
                     icon_path = _MAC_ICONS.get(state, _MAC_ICONS["idle"])
                     if os.path.exists(icon_path):
+                        is_template = (state == "idle")
+                        self.template = is_template
                         self.icon = icon_path
                         self.title = None
-                        self.template = (state == "idle")
                     else:
                         self.title = ICONS.get(state, ICONS["idle"])
             except queue.Empty:
