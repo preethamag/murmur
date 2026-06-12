@@ -54,7 +54,7 @@ class FixWindow:
             sys.exit(1)
 
         root = tk.Tk()
-        root.title("Fix Last Transcription")
+        root.title("Murmur — Fix Last Transcription")
         root.resizable(False, False)
         root.attributes("-topmost", True)
 

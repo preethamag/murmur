@@ -69,24 +69,24 @@ def _value_for(options, label):
 # ── window ────────────────────────────────────────────────────────────────────
 
 class SettingsWindow:
-    W, H = 620, 490
+    W = 620
 
     def __init__(self):
         self.cfg = config.load()
 
         root = tk.Tk()
-        root.title("Murmur Settings")
+        root.title("Murmur — Settings")
         root.resizable(False, False)
         root.attributes("-topmost", True)
 
-        # Center on screen
-        sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
-        x = (sw - self.W) // 2
-        y = (sh - self.H) // 2
-        root.geometry(f"{self.W}x{self.H}+{x}+{y}")
-
         self._root = root
         self._build(root)
+
+        root.update_idletasks()
+        H = root.winfo_reqheight()
+        sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
+        root.geometry(f"{self.W}x{H}+{(sw-self.W)//2}+{(sh-H)//2}")
+
         root.mainloop()
 
     def _row(self, parent, label, row):

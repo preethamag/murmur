@@ -12,13 +12,13 @@ from . import vocabulary as vocab_store
 
 
 class VocabularyWindow:
-    W, H = 540, 420
+    W, H = 560, 440
 
     def __init__(self):
         self._vocab = vocab_store.load()
 
         root = tk.Tk()
-        root.title("Murmur Vocabulary")
+        root.title("Murmur — Vocabulary")
         root.resizable(False, False)
         root.attributes("-topmost", True)
 
@@ -31,7 +31,7 @@ class VocabularyWindow:
 
     def _build(self, root):
         nb = ttk.Notebook(root)
-        nb.pack(fill="both", expand=True, padx=10, pady=(10, 4))
+        nb.pack(fill="both", expand=True, padx=16, pady=(12, 4))
 
         f1 = tk.Frame(nb)
         nb.add(f1, text="  Replacements  ")
@@ -41,9 +41,9 @@ class VocabularyWindow:
         nb.add(f2, text="  Context Words  ")
         self._build_context(f2)
 
-        ttk.Separator(root, orient="horizontal").pack(fill="x")
+        ttk.Separator(root, orient="horizontal").pack(fill="x", pady=(4, 0))
         tk.Button(root, text="  Save  ", command=self._save,
-                  padx=12, pady=4).pack(pady=8)
+                  padx=12, pady=4).pack(pady=(8, 14))
 
     # ── Replacements ───────────────────────────────────────────────────────────
 
@@ -52,7 +52,7 @@ class VocabularyWindow:
             parent,
             text="Always replace a heard word with an exact substitute.",
             fg="gray", font=("", 11),
-        ).pack(anchor="w", padx=10, pady=(8, 2))
+        ).pack(anchor="w", padx=16, pady=(8, 2))
 
         self._rep_tree = ttk.Treeview(
             parent, columns=("hear", "replace"), show="headings", height=9
@@ -61,7 +61,7 @@ class VocabularyWindow:
         self._rep_tree.heading("replace", text="Type instead")
         self._rep_tree.column("hear", width=220)
         self._rep_tree.column("replace", width=220)
-        self._rep_tree.pack(fill="both", expand=True, padx=10, pady=4)
+        self._rep_tree.pack(fill="both", expand=True, padx=16, pady=4)
 
         for wrong, right in self._vocab["replacements"].items():
             self._rep_tree.insert("", "end", values=(wrong, right))
@@ -85,19 +85,19 @@ class VocabularyWindow:
             parent,
             text="List possible forms — the AI picks the right one based on context.",
             fg="gray", font=("", 11),
-        ).pack(anchor="w", padx=10, pady=(8, 2))
+        ).pack(anchor="w", padx=16, pady=(8, 2))
         tk.Label(
             parent,
             text='Example: "lamps, LAMS"  |  "claude, Claude, CLAUDE"',
             fg="gray", font=("", 10),
-        ).pack(anchor="w", padx=10)
+        ).pack(anchor="w", padx=16)
 
         self._ctx_tree = ttk.Treeview(
             parent, columns=("forms",), show="headings", height=9
         )
         self._ctx_tree.heading("forms", text="Possible forms (comma-separated)")
         self._ctx_tree.column("forms", width=460)
-        self._ctx_tree.pack(fill="both", expand=True, padx=10, pady=4)
+        self._ctx_tree.pack(fill="both", expand=True, padx=16, pady=4)
 
         for entry in self._vocab["context_words"]:
             forms = entry.get("forms", [])
