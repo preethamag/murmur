@@ -46,7 +46,7 @@ def _diff_words(original: str, corrected: str) -> list[tuple[str, str]]:
 
 
 class FixWindow:
-    W, H = 480, 260
+    W = 560
 
     def __init__(self):
         self._raw, self._final = _load_last()
@@ -58,34 +58,39 @@ class FixWindow:
         root.resizable(False, False)
         root.attributes("-topmost", True)
 
-        sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
-        root.geometry(f"{self.W}x{self.H}+{(sw-self.W)//2}+{(sh-self.H)//2}")
-
         self._root = root
         self._build(root)
+
+        root.update_idletasks()
+        H = root.winfo_reqheight()
+        sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
+        root.geometry(f"{self.W}x{H}+{(sw-self.W)//2}+{(sh-H)//2}")
+
         root.mainloop()
 
     def _build(self, root):
-        tk.Label(root, text="Correct the transcription — changed words are auto-added to vocabulary.",
-                 fg="gray", font=("", 11)).pack(anchor="w", padx=14, pady=(12, 4))
+        tk.Label(root,
+                 text="Correct the transcription — changed words are auto-added to vocabulary.",
+                 fg="gray", font=("", 11), wraplength=520,
+                 anchor="w", justify="left").pack(fill="x", padx=16, pady=(14, 6))
 
-        self._text = tk.Text(root, height=5, wrap="word", font=("", 13),
+        self._text = tk.Text(root, height=6, wrap="word", font=("", 13),
                              relief="solid", bd=1)
         self._text.insert("1.0", self._final)
-        self._text.pack(fill="x", padx=14, pady=(0, 8))
+        self._text.pack(fill="x", padx=16, pady=(0, 8))
         self._text.focus()
         self._text.mark_set("insert", "end")
 
         self._status = tk.Label(root, text="", fg="gray", font=("", 10))
-        self._status.pack(anchor="w", padx=14)
+        self._status.pack(anchor="w", padx=16)
 
         ttk.Separator(root, orient="horizontal").pack(fill="x", pady=(8, 0))
 
         btn_frame = tk.Frame(root)
-        btn_frame.pack(pady=8)
+        btn_frame.pack(pady=(8, 14))
         tk.Button(btn_frame, text="  Save & Learn  ", command=self._save,
                   padx=10, pady=4).pack(side="left", padx=6)
-        tk.Button(btn_frame, text="Cancel", command=root.destroy,
+        tk.Button(btn_frame, text="  Cancel  ", command=root.destroy,
                   padx=10, pady=4).pack(side="left", padx=6)
 
     def _save(self):
