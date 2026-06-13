@@ -13,7 +13,7 @@ from . import theme
 
 
 class VocabularyWindow:
-    W = 560
+    W, H = 560, 500
 
     def __init__(self):
         self._vocab = vocab_store.load()
@@ -24,7 +24,8 @@ class VocabularyWindow:
         self._root = root
         self._build(root)
 
-        theme.center_window(root, self.W)
+        sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
+        root.geometry(f"{self.W}x{self.H}+{(sw-self.W)//2}+{(sh-self.H)//2}")
         root.mainloop()
 
     def _build(self, root):
@@ -32,22 +33,49 @@ class VocabularyWindow:
                      "Teach Murmur your terminology and preferred spellings.")
         theme.separator(root, top=10, bottom=4)
 
-        # ── Tabs ─────────────────────────────────────────────────────────
-        nb = ttk.Notebook(root)
-        nb.pack(fill="both", expand=True, padx=theme.PAD, pady=(0, 4))
+        # ── Custom tabs ──────────────────────────────────────────────────
+        tab_bar = tk.Frame(root, bg=theme.BG)
+        tab_bar.pack(fill="x", padx=theme.PAD, pady=(0, 8))
 
-        f1 = tk.Frame(nb, bg=theme.BG)
-        nb.add(f1, text="  Replacements  ")
+        self._tab_frames = {}
+        self._tab_buttons = {}
+
+        for name in ("Replacements", "Context Words"):
+            btn = tk.Label(
+                tab_bar, text=f"  {name}  ", bg=theme.FIELD_BG, fg=theme.TEXT,
+                font=theme.LABEL, padx=12, pady=6, cursor="hand2",
+            )
+            btn.pack(side="left", padx=(0, 4))
+            btn.bind("<Button-1>", lambda e, n=name: self._switch_tab(n))
+            self._tab_buttons[name] = btn
+
+        # Tab content frames
+        self._content = tk.Frame(root, bg=theme.BG)
+        self._content.pack(fill="both", expand=True, padx=theme.PAD)
+
+        f1 = tk.Frame(self._content, bg=theme.BG)
+        self._tab_frames["Replacements"] = f1
         self._build_replacements(f1)
 
-        f2 = tk.Frame(nb, bg=theme.BG)
-        nb.add(f2, text="  Context Words  ")
+        f2 = tk.Frame(self._content, bg=theme.BG)
+        self._tab_frames["Context Words"] = f2
         self._build_context(f2)
+
+        self._switch_tab("Replacements")
 
         # ── Save ─────────────────────────────────────────────────────────
         theme.separator(root, top=4, bottom=12)
         btn = theme.dark_button(root, "Save Vocabulary", self._save)
         btn.pack(fill="x", padx=theme.PAD, pady=(0, theme.PAD))
+
+    def _switch_tab(self, name):
+        for n, frame in self._tab_frames.items():
+            if n == name:
+                frame.pack(fill="both", expand=True)
+                self._tab_buttons[n].config(bg=theme.BTN_BG, fg=theme.BTN_FG)
+            else:
+                frame.pack_forget()
+                self._tab_buttons[n].config(bg=theme.FIELD_BG, fg=theme.TEXT)
 
     # ── Replacements ──────────────────────────────────────────────────────────
 
@@ -55,25 +83,33 @@ class VocabularyWindow:
         tk.Label(
             parent, text="Always replace a heard word with an exact substitute.",
             bg=theme.BG, fg=theme.MUTED, font=theme.SUBTITLE,
-        ).pack(anchor="w", padx=16, pady=(10, 4))
+        ).pack(anchor="w", pady=(4, 6))
+
+        # Treeview with styled header
+        style = ttk.Style()
+        style.configure("Vocab.Treeview", font=theme.BODY, rowheight=26,
+                        background=theme.BG, fieldbackground=theme.BG,
+                        foreground=theme.TEXT)
+        style.configure("Vocab.Treeview.Heading", font=theme.LABEL)
 
         self._rep_tree = ttk.Treeview(
-            parent, columns=("hear", "replace"), show="headings", height=9
+            parent, columns=("hear", "replace"), show="headings", height=8,
+            style="Vocab.Treeview",
         )
         self._rep_tree.heading("hear", text="Murmur hears")
         self._rep_tree.heading("replace", text="Type instead")
         self._rep_tree.column("hear", width=220)
         self._rep_tree.column("replace", width=220)
-        self._rep_tree.pack(fill="both", expand=True, padx=16, pady=4)
+        self._rep_tree.pack(fill="both", expand=True, pady=(0, 6))
 
         for wrong, right in self._vocab["replacements"].items():
             self._rep_tree.insert("", "end", values=(wrong, right))
 
-        btn = tk.Frame(parent, bg=theme.BG)
-        btn.pack(pady=(4, 8))
-        add = theme.outline_button(btn, "  + Add  ", self._add_replacement)
+        btn_frame = tk.Frame(parent, bg=theme.BG)
+        btn_frame.pack(pady=(0, 4))
+        add = theme.outline_button(btn_frame, "  + Add  ", self._add_replacement)
         add.pack(side="left", padx=4)
-        rem = theme.outline_button(btn, "  - Remove  ",
+        rem = theme.outline_button(btn_frame, "  - Remove  ",
                                    lambda: self._remove(self._rep_tree))
         rem.pack(side="left", padx=4)
 
@@ -91,29 +127,30 @@ class VocabularyWindow:
             parent,
             text="List possible forms — the AI picks the right one based on context.",
             bg=theme.BG, fg=theme.MUTED, font=theme.SUBTITLE,
-        ).pack(anchor="w", padx=16, pady=(10, 2))
+        ).pack(anchor="w", pady=(4, 2))
         tk.Label(
             parent,
             text='"lamps, LAMS"  |  "claude, Claude, CLAUDE"',
             bg=theme.BG, fg=theme.SUBTLE, font=theme.SMALL,
-        ).pack(anchor="w", padx=16, pady=(0, 4))
+        ).pack(anchor="w", pady=(0, 6))
 
         self._ctx_tree = ttk.Treeview(
-            parent, columns=("forms",), show="headings", height=9
+            parent, columns=("forms",), show="headings", height=8,
+            style="Vocab.Treeview",
         )
         self._ctx_tree.heading("forms", text="Possible forms (comma-separated)")
         self._ctx_tree.column("forms", width=460)
-        self._ctx_tree.pack(fill="both", expand=True, padx=16, pady=4)
+        self._ctx_tree.pack(fill="both", expand=True, pady=(0, 6))
 
         for entry in self._vocab["context_words"]:
             forms = entry.get("forms", [])
             self._ctx_tree.insert("", "end", values=(", ".join(forms),))
 
-        btn = tk.Frame(parent, bg=theme.BG)
-        btn.pack(pady=(4, 8))
-        add = theme.outline_button(btn, "  + Add  ", self._add_context)
+        btn_frame = tk.Frame(parent, bg=theme.BG)
+        btn_frame.pack(pady=(0, 4))
+        add = theme.outline_button(btn_frame, "  + Add  ", self._add_context)
         add.pack(side="left", padx=4)
-        rem = theme.outline_button(btn, "  - Remove  ",
+        rem = theme.outline_button(btn_frame, "  - Remove  ",
                                    lambda: self._remove(self._ctx_tree))
         rem.pack(side="left", padx=4)
 
@@ -176,7 +213,9 @@ class _Dialog(tk.Toplevel):
                      font=theme.LABEL, anchor="w").pack(
                 fill="x", padx=theme.PAD, pady=(4, 2))
             e = tk.Entry(self, width=32, font=theme.BODY,
-                         relief="solid", bd=1)
+                         bg=theme.FIELD_BG, fg=theme.TEXT,
+                         relief="solid", bd=1, highlightthickness=0,
+                         insertbackground=theme.TEXT)
             e.pack(fill="x", padx=theme.PAD, pady=(0, 4))
             # Placeholder hint
             e.insert(0, placeholder)

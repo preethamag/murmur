@@ -1,9 +1,9 @@
 """
 Shared visual theme for Murmur tkinter windows.
 Matches the permissions dialog's Obsidian design language.
+Uses only plain tk widgets (no ttk) for full color control on macOS dark mode.
 """
 import tkinter as tk
-from tkinter import ttk
 
 # ── Colors ────────────────────────────────────────────────────────────────────
 BG       = "#ffffff"
@@ -11,12 +11,13 @@ TEXT     = "#1c1c1e"
 MUTED    = "#8e8e93"
 SUBTLE   = "#c7c7cc"
 BORDER   = "#e5e5ea"
-BADGE_BG = "#f2f2f7"
+FIELD_BG = "#f2f2f7"
 BADGE_FG = "#6e6e73"
 BTN_BG   = "#1c1c1e"
 BTN_FG   = "#ffffff"
 BTN_HOVER = "#3a3a3c"
 GREEN    = "#34c759"
+HOVER_BG = "#eaeaee"
 
 # ── Fonts ─────────────────────────────────────────────────────────────────────
 FONT         = "Helvetica Neue"
@@ -37,20 +38,7 @@ def setup_window(root, title, width=520):
     root.resizable(False, False)
     root.configure(bg=BG)
     root.attributes("-topmost", True)
-    _force_light_mode()
-    _apply_ttk_style(root)
     return root
-
-
-def _force_light_mode():
-    """Force the app to render in light mode regardless of macOS dark mode."""
-    try:
-        from AppKit import NSApplication, NSAppearance
-        app = NSApplication.sharedApplication()
-        light = NSAppearance.appearanceNamed_("NSAppearanceNameAqua")
-        app.setAppearance_(light)
-    except Exception:
-        pass
 
 
 def center_window(root, width):
@@ -124,16 +112,121 @@ def outline_button(parent, text, command):
     return wrap
 
 
-def _apply_ttk_style(root):
-    """Configure ttk styles to blend with the white theme."""
-    style = ttk.Style(root)
-    try:
-        style.theme_use("aqua")
-    except tk.TclError:
-        pass
-    style.configure("Murmur.TCombobox", font=BODY)
-    style.configure("Murmur.TCheckbutton", background=BG, font=BODY)
-    style.configure("Murmur.TNotebook", background=BG)
-    style.configure("Murmur.TNotebook.Tab", font=LABEL, padding=[16, 6])
-    style.configure("Murmur.Treeview", font=BODY, rowheight=26)
-    style.configure("Murmur.Treeview.Heading", font=LABEL)
+# ── Custom Dropdown ───────────────────────────────────────────────────────────
+
+class Dropdown(tk.Frame):
+    """Custom dropdown selector — pure tk, no ttk, full color control.
+
+    Looks like a light gray rounded field with current value + ▼ arrow.
+    Clicking opens a floating list of options.
+    """
+
+    def __init__(self, parent, options, current=None, width=None):
+        super().__init__(parent, bg=FIELD_BG, highlightthickness=1,
+                         highlightbackground=BORDER, cursor="hand2")
+        self._options = options
+        self._var = tk.StringVar(value=current or (options[0] if options else ""))
+        self._popup = None
+
+        self._label = tk.Label(
+            self, textvariable=self._var, bg=FIELD_BG, fg=TEXT,
+            font=BODY, anchor="w", padx=10, pady=7, cursor="hand2",
+        )
+        self._label.pack(side="left", fill="x", expand=True)
+
+        self._arrow = tk.Label(
+            self, text="▾", bg=FIELD_BG, fg=MUTED,
+            font=(FONT, 14), padx=8, cursor="hand2",
+        )
+        self._arrow.pack(side="right")
+
+        self.bind("<Button-1>", self._toggle)
+        self._label.bind("<Button-1>", self._toggle)
+        self._arrow.bind("<Button-1>", self._toggle)
+
+    def get(self):
+        return self._var.get()
+
+    def set(self, value):
+        self._var.set(value)
+
+    def _toggle(self, event=None):
+        if self._popup and self._popup.winfo_exists():
+            self._popup.destroy()
+            self._popup = None
+            return
+        self._show_popup()
+
+    def _show_popup(self):
+        self._popup = popup = tk.Toplevel(self)
+        popup.withdraw()
+        popup.overrideredirect(True)
+        popup.configure(bg=BORDER)
+        popup.attributes("-topmost", True)
+
+        inner = tk.Frame(popup, bg=BG)
+        inner.pack(fill="both", expand=True, padx=1, pady=1)
+
+        current = self._var.get()
+        for opt in self._options:
+            is_selected = (opt == current)
+            item_bg = FIELD_BG if is_selected else BG
+            item = tk.Label(
+                inner, text=opt, bg=item_bg, fg=TEXT,
+                font=BODY, anchor="w", padx=10, pady=5,
+                cursor="hand2",
+            )
+            item.pack(fill="x")
+            item.bind("<Enter>", lambda e, w=item: w.config(bg=HOVER_BG))
+            item.bind("<Leave>", lambda e, w=item, sel=is_selected:
+                      w.config(bg=FIELD_BG if sel else BG))
+            item.bind("<Button-1>", lambda e, v=opt: self._select(v))
+
+        # Position below the dropdown field
+        popup.update_idletasks()
+        x = self.winfo_rootx()
+        y = self.winfo_rooty() + self.winfo_height() + 2
+        w = self.winfo_width()
+        h = popup.winfo_reqheight()
+
+        # Keep popup on screen
+        screen_h = self.winfo_screenheight()
+        if y + h > screen_h - 40:
+            y = self.winfo_rooty() - h - 2
+
+        popup.geometry(f"{w}x{h}+{x}+{y}")
+        popup.deiconify()
+
+        # Close on click outside
+        popup.bind("<FocusOut>", lambda e: self._close_popup())
+        popup.focus_set()
+
+    def _select(self, value):
+        self._var.set(value)
+        self._close_popup()
+
+    def _close_popup(self):
+        if self._popup and self._popup.winfo_exists():
+            self._popup.destroy()
+        self._popup = None
+
+
+# ── Custom Checkbox ───────────────────────────────────────────────────────────
+
+def checkbox(parent, var, title, description=None):
+    """Styled checkbox with title and optional description."""
+    frame = tk.Frame(parent, bg=BG)
+    frame.pack(fill="x", padx=PAD, pady=(4, 4))
+
+    cb = tk.Checkbutton(frame, variable=var, bg=BG,
+                        activebackground=BG, highlightthickness=0)
+    cb.pack(side="left", padx=(0, 6))
+
+    text_frame = tk.Frame(frame, bg=BG)
+    text_frame.pack(side="left", fill="x")
+    tk.Label(text_frame, text=title, bg=BG, fg=TEXT,
+             font=LABEL, anchor="w").pack(fill="x")
+    if description:
+        tk.Label(text_frame, text=description, bg=BG, fg=MUTED,
+                 font=SMALL, anchor="w").pack(fill="x")
+    return frame

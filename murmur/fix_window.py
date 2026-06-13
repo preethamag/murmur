@@ -70,7 +70,10 @@ class FixWindow:
 
         # ── Text editor ──────────────────────────────────────────────────
         self._text = tk.Text(root, height=6, wrap="word", font=theme.BODY,
-                             relief="solid", bd=1, padx=8, pady=8)
+                             bg=theme.FIELD_BG, fg=theme.TEXT,
+                             relief="solid", bd=1, padx=8, pady=8,
+                             highlightthickness=0,
+                             insertbackground=theme.TEXT)
         self._text.insert("1.0", self._final)
         self._text.pack(fill="x", padx=theme.PAD, pady=(0, 4))
         self._text.focus()
