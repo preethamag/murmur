@@ -236,6 +236,8 @@ class MurmurController:
 
 
 def main():
+    import signal
+    signal.signal(signal.SIGINT, lambda *_: os._exit(0))
     MurmurController().start()
 
 
