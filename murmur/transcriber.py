@@ -8,6 +8,14 @@ _FASTER_IDS = {
     "turbo": "large-v3-turbo",
 }
 
+# Known Whisper hallucinations — phantom phrases generated from silence/noise
+_HALLUCINATIONS = {
+    "thank you", "thanks for watching", "thanks for listening",
+    "to do", "todo", "you", "bye", "goodbye", "the end",
+    "subscribe", "like and subscribe", "see you next time",
+    "so", "okay", "oh",
+}
+
 # Cached model instances — keyed by (backend, model_name)
 _cache: dict = {}
 
@@ -22,21 +30,30 @@ def _faster_model_id(model):
     return _FASTER_IDS.get(model, model)
 
 
+def _is_hallucination(text: str) -> bool:
+    """Check if transcription is a known Whisper hallucination."""
+    cleaned = text.strip().rstrip(".,!?").lower()
+    return cleaned in _HALLUCINATIONS
+
+
 def transcribe(audio_path: str, model: str = "base", language: str = "en") -> str:
     lang = language if language != "auto" else None
 
     if _is_apple_silicon():
         try:
-            return _transcribe_mlx(audio_path, model, lang)
+            result = _transcribe_mlx(audio_path, model, lang)
+            return "" if _is_hallucination(result) else result
         except ImportError:
             pass
 
     try:
-        return _transcribe_faster(audio_path, model, lang)
+        result = _transcribe_faster(audio_path, model, lang)
+        return "" if _is_hallucination(result) else result
     except ImportError:
         pass
 
-    return _transcribe_openai(audio_path, model, lang)
+    result = _transcribe_openai(audio_path, model, lang)
+    return "" if _is_hallucination(result) else result
 
 
 def _evict(backend: str):
