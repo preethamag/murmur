@@ -89,11 +89,18 @@ class Recorder:
 
         audio = np.concatenate(frames, axis=0)
 
-        # Skip if audio is essentially silence — prevents Whisper hallucinations.
-        # int16 range is -32768..32767; ambient room noise is typically 100-400,
-        # quiet speech starts around 500+.
-        rms = float(np.sqrt(np.mean(audio.astype(np.float32) ** 2)))
-        if rms < 300:
+        # Skip if no chunk ever exceeded the speech threshold — prevents
+        # Whisper hallucinations on silence/ambient noise.  We check the
+        # *peak* RMS across 0.25 s chunks rather than the whole-file average
+        # so that a long initial pause doesn't drown out real speech.
+        chunk_size = max(1, self.sample_rate // 4)  # 0.25 s chunks
+        peak_rms = 0.0
+        for i in range(0, len(audio), chunk_size):
+            chunk = audio[i:i + chunk_size].astype(np.float32)
+            rms = float(np.sqrt(np.mean(chunk ** 2)))
+            if rms > peak_rms:
+                peak_rms = rms
+        if peak_rms < 300:
             return None
 
         tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
