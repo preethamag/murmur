@@ -89,9 +89,11 @@ class Recorder:
 
         audio = np.concatenate(frames, axis=0)
 
-        # Skip if audio is essentially silence — prevents Whisper hallucinations
+        # Skip if audio is essentially silence — prevents Whisper hallucinations.
+        # int16 range is -32768..32767; ambient room noise is typically 100-400,
+        # quiet speech starts around 500+.
         rms = float(np.sqrt(np.mean(audio.astype(np.float32) ** 2)))
-        if rms < 80:
+        if rms < 300:
             return None
 
         tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)

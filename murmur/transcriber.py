@@ -63,6 +63,17 @@ def _evict(backend: str):
             del _cache[k]
 
 
+def _is_silent(result: dict) -> bool:
+    """Check if Whisper thinks the audio contains no speech, using per-segment
+    no_speech_prob values. Returns True when the model is confident there is
+    no real speech (average probability > 0.5)."""
+    segments = result.get("segments") or []
+    if not segments:
+        return True
+    avg_prob = sum(s.get("no_speech_prob", 0) for s in segments) / len(segments)
+    return avg_prob > 0.5
+
+
 def _transcribe_mlx(audio_path, model, lang):
     import mlx_whisper
     # mlx_whisper.transcribe → load_model() is @lru_cache'd internally
@@ -70,8 +81,11 @@ def _transcribe_mlx(audio_path, model, lang):
     result = mlx_whisper.transcribe(
         audio_path,
         path_or_hf_repo=_mlx_model_id(model),
+        hallucination_silence_threshold=2.0,
         **kwargs,
     )
+    if _is_silent(result):
+        return ""
     return result["text"].strip()
 
 
