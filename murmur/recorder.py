@@ -28,6 +28,15 @@ class Recorder:
         self._stream = None
 
     def start(self):
+        # Ensure any previous stream is fully torn down first
+        if self._stream is not None:
+            try:
+                self._stream.stop()
+                self._stream.close()
+            except Exception:
+                pass
+            self._stream = None
+
         with self._lock:
             self._frames = []
             self._frame_count = 0

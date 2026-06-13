@@ -14,12 +14,16 @@ from . import (injector, transcriber, tray, permissions,
 _LAST_FILE = config.CONFIG_DIR / ".last.json"
 
 
+_COOLDOWN = 0.4  # seconds — minimum gap between recording cycles
+
+
 class MurmurController:
     def __init__(self):
         self.cfg = config.load()
         self._recorder = self._build_recorder()
         self._state = "idle"
         self._session_id = 0           # bumped each new recording
+        self._last_idle_at = 0.0       # when we last returned to idle
         self._state_lock = threading.Lock()
         self._set_state = lambda s: None  # replaced by tray after init
 
@@ -46,6 +50,8 @@ class MurmurController:
     def _set(self, state):
         with self._state_lock:
             self._state = state
+            if state == "idle":
+                self._last_idle_at = time.time()
         self._set_state(state)
 
     # ── recording helpers ───────────────────────────────────────────────────────
@@ -54,6 +60,10 @@ class MurmurController:
         # Atomic check-and-set so two fast hotkey events can't both start a recording.
         with self._state_lock:
             if self._state != "idle":
+                return None
+            # Cooldown: don't restart the audio stream too fast — PortAudio
+            # needs time to fully tear down the previous stream.
+            if time.time() - self._last_idle_at < _COOLDOWN:
                 return None
             self._state = "recording"
             self._session_id += 1
