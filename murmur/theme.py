@@ -37,15 +37,20 @@ def setup_window(root, title, width=520):
     root.resizable(False, False)
     root.configure(bg=BG)
     root.attributes("-topmost", True)
-    # Force light appearance so ttk widgets don't inherit macOS dark mode
-    try:
-        root.tk.call(
-            "::tk::unsupported::MacWindowStyle", "appearance", root._w, "light"
-        )
-    except tk.TclError:
-        pass
+    _force_light_mode()
     _apply_ttk_style(root)
     return root
+
+
+def _force_light_mode():
+    """Force the app to render in light mode regardless of macOS dark mode."""
+    try:
+        from AppKit import NSApplication, NSAppearance
+        app = NSApplication.sharedApplication()
+        light = NSAppearance.appearanceNamed_("NSAppearanceNameAqua")
+        app.setAppearance_(light)
+    except Exception:
+        pass
 
 
 def center_window(root, width):
