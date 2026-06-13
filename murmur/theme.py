@@ -37,6 +37,13 @@ def setup_window(root, title, width=520):
     root.resizable(False, False)
     root.configure(bg=BG)
     root.attributes("-topmost", True)
+    # Force light appearance so ttk widgets don't inherit macOS dark mode
+    try:
+        root.tk.call(
+            "::tk::unsupported::MacWindowStyle", "appearance", root._w, "light"
+        )
+    except tk.TclError:
+        pass
     _apply_ttk_style(root)
     return root
 
