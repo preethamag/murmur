@@ -7,9 +7,9 @@ import sys
 import json
 import difflib
 import tkinter as tk
-from tkinter import ttk
 
 from . import vocabulary as vocab_store
+from . import theme
 from .config import CONFIG_DIR
 
 _LAST_FILE = CONFIG_DIR / ".last.json"
@@ -35,7 +35,7 @@ def _diff_words(original: str, corrected: str) -> list[tuple[str, str]]:
     pairs = []
     matcher = difflib.SequenceMatcher(a=orig, b=corr, autojunk=False)
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-        # Only treat 1↔1 replacements as a "correction" — multi-word edits
+        # Only treat 1-to-1 replacements as a "correction" — multi-word edits
         # are too ambiguous to safely auto-add as vocabulary rules.
         if tag == "replace" and (i2 - i1) == 1 and (j2 - j1) == 1:
             o_clean = orig[i1].strip(_STRIP_CHARS)
@@ -46,7 +46,7 @@ def _diff_words(original: str, corrected: str) -> list[tuple[str, str]]:
 
 
 class FixWindow:
-    W = 560
+    W = 520
 
     def __init__(self):
         self._raw, self._final = _load_last()
@@ -54,44 +54,45 @@ class FixWindow:
             sys.exit(1)
 
         root = tk.Tk()
-        root.title("Murmur — Fix Last Transcription")
-        root.resizable(False, False)
-        root.attributes("-topmost", True)
+        theme.setup_window(root, "Murmur — Fix Last Transcription", self.W)
 
         self._root = root
         self._build(root)
 
-        root.update_idletasks()
-        H = root.winfo_reqheight()
-        sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
-        root.geometry(f"{self.W}x{H}+{(sw-self.W)//2}+{(sh-H)//2}")
-
+        theme.center_window(root, self.W)
         root.mainloop()
 
     def _build(self, root):
-        tk.Label(root,
-                 text="Correct the transcription — changed words are auto-added to vocabulary.",
-                 fg="gray", font=("", 11), wraplength=520,
-                 anchor="w", justify="left").pack(fill="x", padx=16, pady=(14, 6))
+        theme.header(root, "Fix Transcription",
+                     "Edit the text below — changed words are auto-added\n"
+                     "to your vocabulary for future transcriptions.")
+        theme.separator(root, top=10, bottom=8)
 
-        self._text = tk.Text(root, height=6, wrap="word", font=("", 13),
-                             relief="solid", bd=1)
+        # ── Text editor ──────────────────────────────────────────────────
+        self._text = tk.Text(root, height=6, wrap="word", font=theme.BODY,
+                             relief="solid", bd=1, padx=8, pady=8)
         self._text.insert("1.0", self._final)
-        self._text.pack(fill="x", padx=16, pady=(0, 8))
+        self._text.pack(fill="x", padx=theme.PAD, pady=(0, 4))
         self._text.focus()
         self._text.mark_set("insert", "end")
 
-        self._status = tk.Label(root, text="", fg="gray", font=("", 10))
-        self._status.pack(anchor="w", padx=16)
+        # ── Status ───────────────────────────────────────────────────────
+        self._status = tk.Label(root, text="", bg=theme.BG, fg=theme.MUTED,
+                                font=theme.SMALL)
+        self._status.pack(anchor="w", padx=theme.PAD, pady=(0, 4))
 
-        ttk.Separator(root, orient="horizontal").pack(fill="x", pady=(8, 0))
+        # ── Buttons ──────────────────────────────────────────────────────
+        theme.separator(root, top=4, bottom=12)
 
-        btn_frame = tk.Frame(root)
-        btn_frame.pack(pady=(8, 14))
-        tk.Button(btn_frame, text="  Save & Learn  ", command=self._save,
-                  padx=10, pady=4).pack(side="left", padx=6)
-        tk.Button(btn_frame, text="  Cancel  ", command=root.destroy,
-                  padx=10, pady=4).pack(side="left", padx=6)
+        btn_frame = tk.Frame(root, bg=theme.BG)
+        btn_frame.pack(fill="x", padx=theme.PAD, pady=(0, theme.PAD))
+
+        save = theme.dark_button(btn_frame, "Save & Learn", self._save)
+        save.pack(side="left", fill="x", expand=True, padx=(0, 6))
+
+        cancel = theme.outline_button(btn_frame, "  Cancel  ",
+                                      self._root.destroy)
+        cancel.pack(side="left")
 
     def _save(self):
         corrected = self._text.get("1.0", "end").strip()
@@ -107,7 +108,8 @@ class FixWindow:
                 vocab["replacements"][wrong] = right
             vocab_store.save(vocab)
             self._status.config(
-                text=f"✓ Added {len(pairs)} correction(s) to vocabulary.", fg="green"
+                text=f"Added {len(pairs)} correction(s) to vocabulary.",
+                fg=theme.GREEN,
             )
             self._root.after(1200, lambda: (self._root.destroy(), sys.exit(0)))
         else:

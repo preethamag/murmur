@@ -7,7 +7,7 @@ import sys
 import tkinter as tk
 from tkinter import ttk
 
-from . import config, launcher
+from . import config, launcher, theme
 from .recorder import list_input_devices
 
 # ── option maps ───────────────────────────────────────────────────────────────
@@ -31,7 +31,7 @@ MODELS = [
     ("tiny     —  75 MB   fastest, basic accuracy",       "tiny"),
     ("base     — 145 MB   fast, good accuracy",           "base"),
     ("small    — 466 MB   balanced speed & accuracy",     "small"),
-    ("turbo    — 809 MB   near-best accuracy, 8× faster ★", "turbo"),
+    ("turbo    — 809 MB   near-best accuracy, 8× faster", "turbo"),
     ("medium   —  1.5 GB  high accuracy",                 "medium"),
     ("large-v3 —  3.0 GB  best accuracy",                 "large-v3"),
 ]
@@ -69,102 +69,105 @@ def _value_for(options, label):
 # ── window ────────────────────────────────────────────────────────────────────
 
 class SettingsWindow:
-    W = 620
+    W = 540
 
     def __init__(self):
         self.cfg = config.load()
 
         root = tk.Tk()
-        root.title("Murmur — Settings")
-        root.resizable(False, False)
-        root.attributes("-topmost", True)
+        theme.setup_window(root, "Murmur — Settings", self.W)
 
         self._root = root
         self._build(root)
 
-        root.update_idletasks()
-        H = root.winfo_reqheight()
-        sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
-        root.geometry(f"{self.W}x{H}+{(sw-self.W)//2}+{(sh-H)//2}")
-
+        theme.center_window(root, self.W)
         root.mainloop()
 
-    def _row(self, parent, label, row):
-        tk.Label(parent, text=label, anchor="w", width=14).grid(
-            row=row, column=0, sticky="w", padx=(16, 8), pady=10
-        )
-
-    def _combo(self, parent, options, current_val, row):
+    def _dropdown(self, parent, label, options, current_val):
+        """Create a label + combobox pair, return the StringVar."""
+        theme.field_label(parent, label)
         labels = [lbl for lbl, _ in options]
         var = tk.StringVar(value=_label_for(options, current_val))
         cb = ttk.Combobox(parent, textvariable=var, values=labels,
-                          state="readonly")
-        cb.grid(row=row, column=1, sticky="ew", padx=(0, 20), pady=10)
+                          state="readonly", font=theme.BODY)
+        cb.pack(fill="x", padx=theme.PAD, pady=(0, 2))
         return var
 
     def _build(self, root):
-        frame = tk.Frame(root, padx=8, pady=8)
-        frame.pack(fill="both", expand=True)
-        frame.columnconfigure(1, weight=1)
+        theme.header(root, "Settings", "Configure your Murmur preferences.")
+        theme.separator(root, top=10, bottom=4)
 
-        self._row(frame, "Input mode", 0)
-        self._mode_var = self._combo(frame, INPUT_MODES, self.cfg.get("input_mode", "hold"), 0)
+        # ── Dropdowns ────────────────────────────────────────────────────
+        self._mode_var = self._dropdown(
+            root, "Input mode", INPUT_MODES,
+            self.cfg.get("input_mode", "hold"))
 
-        self._row(frame, "Hotkey", 1)
-        self._hotkey_var = self._combo(frame, HOTKEYS, self.cfg["hotkey"], 1)
+        self._hotkey_var = self._dropdown(
+            root, "Hotkey", HOTKEYS, self.cfg["hotkey"])
 
-        self._row(frame, "Model", 2)
-        self._model_var = self._combo(frame, MODELS, self.cfg["model"], 2)
+        self._model_var = self._dropdown(
+            root, "Model", MODELS, self.cfg["model"])
 
-        self._row(frame, "Language", 3)
-        self._lang_var = self._combo(frame, LANGUAGES, self.cfg["language"], 3)
+        self._lang_var = self._dropdown(
+            root, "Language", LANGUAGES, self.cfg["language"])
 
-        # Microphone selector
-        self._row(frame, "Microphone", 4)
+        # Microphone
         self._devices = [{"name": "System default", "index": None}] + list_input_devices()
         mic_labels = [d["name"] for d in self._devices]
         current_mic = self.cfg.get("device") or "System default"
-        self._mic_var = tk.StringVar(value=current_mic if current_mic in mic_labels else "System default")
-        mic_cb = ttk.Combobox(frame, textvariable=self._mic_var, values=mic_labels,
-                              state="readonly")
-        mic_cb.grid(row=4, column=1, sticky="ew", padx=(0, 20), pady=10)
+        theme.field_label(root, "Microphone")
+        self._mic_var = tk.StringVar(
+            value=current_mic if current_mic in mic_labels else "System default")
+        mic_cb = ttk.Combobox(root, textvariable=self._mic_var, values=mic_labels,
+                              state="readonly", font=theme.BODY)
+        mic_cb.pack(fill="x", padx=theme.PAD, pady=(0, 2))
 
-        self._row(frame, "Max duration", 5)
-        dur_frame = tk.Frame(frame)
-        dur_frame.grid(row=5, column=1, sticky="w", pady=10)
+        # Max duration
+        theme.field_label(root, "Max duration")
+        dur_frame = tk.Frame(root, bg=theme.BG)
+        dur_frame.pack(fill="x", padx=theme.PAD, pady=(0, 2))
         self._dur_var = tk.StringVar(value=str(self.cfg.get("max_duration", 60)))
-        tk.Entry(dur_frame, textvariable=self._dur_var, width=6).pack(side="left")
-        tk.Label(dur_frame, text=" seconds").pack(side="left")
+        e = tk.Entry(dur_frame, textvariable=self._dur_var, width=6,
+                     font=theme.BODY, relief="solid", bd=1)
+        e.pack(side="left")
+        tk.Label(dur_frame, text="  seconds", bg=theme.BG, fg=theme.MUTED,
+                 font=theme.BODY).pack(side="left")
 
-        self._row(frame, "AI Cleanup", 6)
-        ai_frame = tk.Frame(frame)
-        ai_frame.grid(row=6, column=1, sticky="w", pady=10)
+        # ── Toggles ─────────────────────────────────────────────────────
+        theme.separator(root, top=12, bottom=8)
+
         self._ai_var = tk.BooleanVar(value=self.cfg.get("ai_cleanup", False))
-        tk.Checkbutton(
-            ai_frame, variable=self._ai_var,
-            text="Remove fillers & fix grammar  (requires Ollama)",
-        ).pack(side="left")
+        self._checkbox(root, self._ai_var,
+                       "AI cleanup", "Remove fillers & fix grammar (requires Ollama)")
 
-        self._row(frame, "Sound feedback", 7)
-        snd_frame = tk.Frame(frame)
-        snd_frame.grid(row=7, column=1, sticky="w", pady=10)
         self._snd_var = tk.BooleanVar(value=self.cfg.get("sound_feedback", True))
-        tk.Checkbutton(snd_frame, variable=self._snd_var,
-                       text="Play tones on record start/stop").pack(side="left")
+        self._checkbox(root, self._snd_var,
+                       "Sound feedback", "Play tones on record start/stop")
 
-        self._row(frame, "Launch at login", 8)
-        login_frame = tk.Frame(frame)
-        login_frame.grid(row=8, column=1, sticky="w", pady=10)
         self._login_var = tk.BooleanVar(value=launcher.is_enabled())
-        tk.Checkbutton(login_frame, variable=self._login_var,
-                       text="Start Murmur automatically at login").pack(side="left")
+        self._checkbox(root, self._login_var,
+                       "Launch at login", "Start Murmur automatically at login")
 
-        # Divider + Save
-        ttk.Separator(root, orient="horizontal").pack(fill="x", pady=(0, 10))
-        btn_frame = tk.Frame(root)
-        btn_frame.pack(pady=(0, 16))
-        tk.Button(btn_frame, text="  Save  ", command=self._save,
-                  padx=12, pady=4).pack()
+        # ── Save ─────────────────────────────────────────────────────────
+        theme.separator(root, top=12, bottom=12)
+        btn = theme.dark_button(root, "Save Settings", self._save)
+        btn.pack(fill="x", padx=theme.PAD, pady=(0, theme.PAD))
+
+    def _checkbox(self, parent, var, title, description):
+        """Styled checkbox with title and description."""
+        frame = tk.Frame(parent, bg=theme.BG)
+        frame.pack(fill="x", padx=theme.PAD, pady=(4, 4))
+
+        cb = tk.Checkbutton(frame, variable=var, bg=theme.BG,
+                            activebackground=theme.BG)
+        cb.pack(side="left", padx=(0, 6))
+
+        text_frame = tk.Frame(frame, bg=theme.BG)
+        text_frame.pack(side="left", fill="x")
+        tk.Label(text_frame, text=title, bg=theme.BG, fg=theme.TEXT,
+                 font=theme.LABEL, anchor="w").pack(fill="x")
+        tk.Label(text_frame, text=description, bg=theme.BG, fg=theme.MUTED,
+                 font=theme.SMALL, anchor="w").pack(fill="x")
 
     def _save(self):
         try:

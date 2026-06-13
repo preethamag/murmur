@@ -9,50 +9,53 @@ import tkinter as tk
 from tkinter import ttk
 
 from . import vocabulary as vocab_store
+from . import theme
 
 
 class VocabularyWindow:
-    W, H = 560, 440
+    W = 560
 
     def __init__(self):
         self._vocab = vocab_store.load()
 
         root = tk.Tk()
-        root.title("Murmur — Vocabulary")
-        root.resizable(False, False)
-        root.attributes("-topmost", True)
-
-        sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
-        root.geometry(f"{self.W}x{self.H}+{(sw-self.W)//2}+{(sh-self.H)//2}")
+        theme.setup_window(root, "Murmur — Vocabulary", self.W)
 
         self._root = root
         self._build(root)
+
+        theme.center_window(root, self.W)
         root.mainloop()
 
     def _build(self, root):
-        nb = ttk.Notebook(root)
-        nb.pack(fill="both", expand=True, padx=16, pady=(12, 4))
+        theme.header(root, "Vocabulary",
+                     "Teach Murmur your terminology and preferred spellings.")
+        theme.separator(root, top=10, bottom=4)
 
-        f1 = tk.Frame(nb)
+        # ── Tabs ─────────────────────────────────────────────────────────
+        nb = ttk.Notebook(root)
+        nb.pack(fill="both", expand=True, padx=theme.PAD, pady=(0, 4))
+
+        f1 = tk.Frame(nb, bg=theme.BG)
         nb.add(f1, text="  Replacements  ")
         self._build_replacements(f1)
 
-        f2 = tk.Frame(nb)
+        f2 = tk.Frame(nb, bg=theme.BG)
         nb.add(f2, text="  Context Words  ")
         self._build_context(f2)
 
-        ttk.Separator(root, orient="horizontal").pack(fill="x", pady=(4, 0))
-        tk.Button(root, text="  Save  ", command=self._save,
-                  padx=12, pady=4).pack(pady=(8, 14))
+        # ── Save ─────────────────────────────────────────────────────────
+        theme.separator(root, top=4, bottom=12)
+        btn = theme.dark_button(root, "Save Vocabulary", self._save)
+        btn.pack(fill="x", padx=theme.PAD, pady=(0, theme.PAD))
 
-    # ── Replacements ───────────────────────────────────────────────────────────
+    # ── Replacements ──────────────────────────────────────────────────────────
 
     def _build_replacements(self, parent):
         tk.Label(
-            parent,
-            text="Always replace a heard word with an exact substitute.",
-            fg="gray", font=("", 11),
-        ).pack(anchor="w", padx=16, pady=(8, 2))
+            parent, text="Always replace a heard word with an exact substitute.",
+            bg=theme.BG, fg=theme.MUTED, font=theme.SUBTITLE,
+        ).pack(anchor="w", padx=16, pady=(10, 4))
 
         self._rep_tree = ttk.Treeview(
             parent, columns=("hear", "replace"), show="headings", height=9
@@ -66,10 +69,13 @@ class VocabularyWindow:
         for wrong, right in self._vocab["replacements"].items():
             self._rep_tree.insert("", "end", values=(wrong, right))
 
-        btn = tk.Frame(parent)
-        btn.pack(pady=4)
-        tk.Button(btn, text="+ Add", command=self._add_replacement, padx=8).pack(side="left", padx=4)
-        tk.Button(btn, text="− Remove", command=lambda: self._remove(self._rep_tree), padx=8).pack(side="left", padx=4)
+        btn = tk.Frame(parent, bg=theme.BG)
+        btn.pack(pady=(4, 8))
+        add = theme.outline_button(btn, "  + Add  ", self._add_replacement)
+        add.pack(side="left", padx=4)
+        rem = theme.outline_button(btn, "  - Remove  ",
+                                   lambda: self._remove(self._rep_tree))
+        rem.pack(side="left", padx=4)
 
     def _add_replacement(self):
         _Dialog(
@@ -78,19 +84,19 @@ class VocabularyWindow:
             lambda vals: self._rep_tree.insert("", "end", values=vals),
         )
 
-    # ── Context Words ──────────────────────────────────────────────────────────
+    # ── Context Words ─────────────────────────────────────────────────────────
 
     def _build_context(self, parent):
         tk.Label(
             parent,
             text="List possible forms — the AI picks the right one based on context.",
-            fg="gray", font=("", 11),
-        ).pack(anchor="w", padx=16, pady=(8, 2))
+            bg=theme.BG, fg=theme.MUTED, font=theme.SUBTITLE,
+        ).pack(anchor="w", padx=16, pady=(10, 2))
         tk.Label(
             parent,
-            text='Example: "lamps, LAMS"  |  "claude, Claude, CLAUDE"',
-            fg="gray", font=("", 10),
-        ).pack(anchor="w", padx=16)
+            text='"lamps, LAMS"  |  "claude, Claude, CLAUDE"',
+            bg=theme.BG, fg=theme.SUBTLE, font=theme.SMALL,
+        ).pack(anchor="w", padx=16, pady=(0, 4))
 
         self._ctx_tree = ttk.Treeview(
             parent, columns=("forms",), show="headings", height=9
@@ -103,10 +109,13 @@ class VocabularyWindow:
             forms = entry.get("forms", [])
             self._ctx_tree.insert("", "end", values=(", ".join(forms),))
 
-        btn = tk.Frame(parent)
-        btn.pack(pady=4)
-        tk.Button(btn, text="+ Add", command=self._add_context, padx=8).pack(side="left", padx=4)
-        tk.Button(btn, text="− Remove", command=lambda: self._remove(self._ctx_tree), padx=8).pack(side="left", padx=4)
+        btn = tk.Frame(parent, bg=theme.BG)
+        btn.pack(pady=(4, 8))
+        add = theme.outline_button(btn, "  + Add  ", self._add_context)
+        add.pack(side="left", padx=4)
+        rem = theme.outline_button(btn, "  - Remove  ",
+                                   lambda: self._remove(self._ctx_tree))
+        rem.pack(side="left", padx=4)
 
     def _add_context(self):
         _Dialog(
@@ -115,7 +124,7 @@ class VocabularyWindow:
             lambda vals: self._ctx_tree.insert("", "end", values=vals),
         )
 
-    # ── Shared ─────────────────────────────────────────────────────────────────
+    # ── Shared ────────────────────────────────────────────────────────────────
 
     def _remove(self, tree):
         for item in tree.selection():
@@ -141,48 +150,48 @@ class VocabularyWindow:
         sys.exit(0)
 
 
-# ── Generic add dialog ─────────────────────────────────────────────────────────
+# ── Generic add dialog ────────────────────────────────────────────────────────
 
 class _Dialog(tk.Toplevel):
     """Generic 1-or-2-field add dialog. Calls on_save(tuple_of_values) on confirm."""
-
-    def _fg_color(self):
-        try:
-            bg = self.winfo_rgb(self.cget("bg"))
-            luminance = (bg[0] * 0.299 + bg[1] * 0.587 + bg[2] * 0.114) / 65535
-            return "white" if luminance < 0.5 else "black"
-        except Exception:
-            return "black"
 
     def __init__(self, parent, title, fields, on_save):
         super().__init__(parent)
         self._on_save = on_save
         self._entries = []
 
-        self.title(title)
+        self.title(f"Murmur — {title}")
         self.resizable(False, False)
+        self.configure(bg=theme.BG)
         self.attributes("-topmost", True)
         self.grab_set()
 
-        for i, (label, placeholder) in enumerate(fields):
-            tk.Label(self, text=label, anchor="w").grid(
-                row=i, column=0, padx=(16, 8), pady=(14 if i == 0 else 6, 6), sticky="w"
-            )
-            e = tk.Entry(self, width=28)
-            e.insert(0, "")
-            e.grid(row=i, column=1, padx=(0, 16), pady=(14 if i == 0 else 6, 6))
-            # show placeholder hint in gray; clear on focus
+        # Title
+        tk.Label(self, text=title, bg=theme.BG, fg=theme.TEXT,
+                 font=theme.TITLE, anchor="w").pack(
+            fill="x", padx=theme.PAD, pady=(theme.PAD, 8))
+
+        for label, placeholder in fields:
+            tk.Label(self, text=label, bg=theme.BG, fg=theme.TEXT,
+                     font=theme.LABEL, anchor="w").pack(
+                fill="x", padx=theme.PAD, pady=(4, 2))
+            e = tk.Entry(self, width=32, font=theme.BODY,
+                         relief="solid", bd=1)
+            e.pack(fill="x", padx=theme.PAD, pady=(0, 4))
+            # Placeholder hint
             e.insert(0, placeholder)
-            e.config(fg="gray")
+            e.config(fg=theme.SUBTLE)
             e.bind("<FocusIn>", lambda ev, entry=e, ph=placeholder: (
                 entry.delete(0, "end") if entry.get() == ph else None,
-                entry.config(fg=self._fg_color()),
+                entry.config(fg=theme.TEXT),
             ))
             self._entries.append((e, placeholder))
 
-        tk.Button(self, text="Add", command=self._add, padx=10).grid(
-            row=len(fields), column=0, columnspan=2, pady=12
-        )
+        # Add button
+        theme.separator(self, top=8, bottom=12)
+        btn = theme.dark_button(self, "Add", self._add)
+        btn.pack(fill="x", padx=theme.PAD, pady=(0, theme.PAD))
+
         if self._entries:
             self._entries[0][0].focus()
 
